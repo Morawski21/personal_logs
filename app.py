@@ -3,7 +3,7 @@ import pandas as pd
 import random
 import os
 
-st.title("Hello Synology!")
+st.title("Hello Synology! Test commit")
 st.write(f"Here's your random number: {random.randint(1, 100)}")
 
 # Use absolute path to the mounted volume
