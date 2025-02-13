@@ -19,11 +19,11 @@ jobs:
           password: ${{ secrets.SYNOLOGY_PASSWORD }}
           script: |
             cd /volume1/docker/personal-logs
-            docker build -t personal-logs .
-            docker stop personal-logs || true
-            docker rm personal-logs || true
+            docker build -t personal-logs2 .
+            docker stop personal-logs2 || true
+            docker rm personal-logs2 || true
             docker run -d \
-              --name personal-logs \
+              --name personal-logs2 \
               -p 8501:8501 \
               -v /volume1/docker/personal-logs/data:/data \
-              personal-logs
+              personal-logs2
