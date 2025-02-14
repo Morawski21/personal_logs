@@ -3,15 +3,16 @@ import pandas as pd
 import datetime
 import os
 import utils
+import config
 
 # Page config
-st.set_page_config(page_title="Logbook", layout="wide")
-st.title("Daily Logbook 2025")
+st.set_page_config(page_title="Personal Logbook", layout="wide")
+st.title("Personal Logbook")
 
 # Load existing data
 try:
     df, loaded_path = utils.load_logbook_data()
-    st.success(f"Excel file loaded successfully from: {loaded_path}")
+    st.success(f"Data loaded successfully from: {loaded_path}")
     # Convert any datetime columns to DD.MM.YYYY format for display
     if 'Data' in df.columns:
         df['Data'] = df['Data'].dt.strftime('%d.%m.%Y')
@@ -26,6 +27,13 @@ today = datetime.datetime.now()
 today_str = today.strftime('%d.%m.%Y')
 today_record = df[df['Data'] == today_str].iloc[0] if not df.empty and (df['Data'] == today_str).any() else None
 
+# Get active fields configuration
+active_fields = config.get_active_fields()
+time_columns = [field for field in active_fields if field not in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h", "sport", "accessories", "suplementy"]]
+
+# Filter dataframe to include only active fields
+df = df[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
+
 # Create form for input
 st.header("Add/Update Today's Record")
 
@@ -35,66 +43,32 @@ col1, col2, col3 = st.columns(3)
 # Initialize all form variables with existing values if available
 with col1:
     st.subheader("Time Activities")
-    tech_praca = st.number_input("Tech + Praca (minutes)", 
-                                min_value=0, 
-                                value=int(today_record['Tech + Praca']) if today_record is not None and pd.notna(today_record['Tech + Praca']) else 0,
-                                key='tech_praca')
-    youtube = st.number_input("YouTube (minutes)", 
-                             min_value=0, 
-                             value=int(today_record['YouTube']) if today_record is not None and pd.notna(today_record['YouTube']) else 0,
-                             key='youtube')
-    czytanie = st.number_input("Czytanie (minutes)", 
-                              min_value=0, 
-                              value=int(today_record['Czytanie']) if today_record is not None and pd.notna(today_record['Czytanie']) else 0,
-                              key='czytanie')
-    gitara = st.number_input("Gitara (minutes)", 
+    for field in ["Tech + Praca", "YouTube", "Czytanie", "Gitara", "Inne"]:
+        if active_fields.get(field):
+            st.number_input(f"{field} (minutes)", 
                             min_value=0, 
-                            value=int(today_record['Gitara']) if today_record is not None and pd.notna(today_record['Gitara']) else 0,
-                            key='gitara')
-    inne = st.number_input("Inne (minutes)", 
-                          min_value=0, 
-                          value=int(today_record['Inne']) if today_record is not None and pd.notna(today_record['Inne']) else 0,
-                          key='inne')
+                            value=int(today_record[field]) if today_record is not None and pd.notna(today_record[field]) else 0,
+                            key=field.lower().replace(" ", "_"))
 
     # Calculate total immediately
-    razem = tech_praca + youtube + czytanie + gitara + inne
+    razem = sum(st.session_state[field.lower().replace(" ", "_")] for field in ["Tech + Praca", "YouTube", "Czytanie", "Gitara", "Inne"] if active_fields.get(field))
     st.write(f"Total time: {razem} minutes")
 
 with col2:
     st.subheader("Daily Tasks")
-    clean_20min = st.checkbox("20min clean", 
-                             value=bool(today_record['20min clean']) if today_record is not None else False,
-                             key='clean')
-    ynab = st.checkbox("YNAB", 
-                       value=bool(today_record['YNAB']) if today_record is not None else False,
-                       key='ynab')
-    anki = st.checkbox("Anki", 
-                       value=bool(today_record['Anki']) if today_record is not None else False,
-                       key='anki')
-    pamietnik = st.checkbox("Pamiętnik", 
-                           value=bool(today_record['Pamiętnik']) if today_record is not None else False,
-                           key='pamietnik')
-    plan_jutro = st.checkbox("Plan na jutro", 
-                            value=bool(today_record['Plan na jutro']) if today_record is not None else False,
-                            key='plan_jutro')
-    no_porn = st.checkbox("No porn", 
-                         value=bool(today_record['No porn']) if today_record is not None else False,
-                         key='no_porn')
-    gaming = st.checkbox("Gaming <1h", 
-                        value=bool(today_record['Gaming <1h']) if today_record is not None else False,
-                        key='gaming')
+    for field in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h"]:
+        if active_fields.get(field):
+            st.checkbox(field, 
+                        value=bool(today_record[field]) if today_record is not None else False,
+                        key=field.lower().replace(" ", "_"))
 
 with col3:
     st.subheader("Additional Info")
-    sport = st.text_input("Sport", 
-                         value=str(today_record['sport']) if today_record is not None and pd.notna(today_record['sport']) else "",
-                         key='sport')
-    accessories = st.text_input("Accessories", 
-                               value=str(today_record['accessories']) if today_record is not None and pd.notna(today_record['accessories']) else "",
-                               key='accessories')
-    suplementy = st.text_input("Suplementy", 
-                              value=str(today_record['suplementy']) if today_record is not None and pd.notna(today_record['suplementy']) else "",
-                              key='suplementy')
+    for field in ["sport", "accessories", "suplementy"]:
+        if active_fields.get(field):
+            st.text_input(field.capitalize(), 
+                          value=str(today_record[field]) if today_record is not None and pd.notna(today_record[field]) else "",
+                          key=field.lower().replace(" ", "_"))
 
 # Add/Update record button
 button_text = "Update Today's Record" if today_record is not None else "Add Today's Record"
@@ -104,24 +78,11 @@ if st.button(button_text):
     new_record = {
         'Data': today_str,
         'WEEKDAY': weekday,
-        'Tech + Praca': tech_praca,
-        'YouTube': youtube,
-        'Czytanie': czytanie,
-        'Gitara': gitara,
-        'Inne': inne,
-        'Razem': razem,
-        'sport': sport,
-        'accessories': accessories,
-        'suplementy': suplementy,
-        '20min clean': int(clean_20min),
-        'YNAB': int(ynab),
-        'Anki': int(anki),
-        'Pamiętnik': int(pamietnik),
-        'Plan na jutro': int(plan_jutro),
-        'No porn': int(no_porn),
-        'Gaming <1h': int(gaming)
+        'Razem': razem
     }
-    
+    for field in active_fields:
+        new_record[field] = st.session_state[field.lower().replace(" ", "_")]
+
     if today_record is not None:
         # Update existing record
         df = df[df['Data'] != today_str]  # Remove the old record

@@ -3,6 +3,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import utils
+import config
 
 st.set_page_config(page_title="Logbook Analytics", layout="wide")
 st.title("Productivity Analytics")
@@ -40,6 +41,12 @@ else:
 st.header("Key Metrics")
 col1, col2, col3, col4 = st.columns(4)
 
+active_fields = config.get_active_fields()
+time_columns = [field for field in active_fields if field not in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h", "sport", "accessories", "suplementy"]]
+
+# Filter dataframe to include only active fields
+df_filtered = df_filtered[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
+
 with col1:
     avg_total = df_filtered['Razem'].mean()
     st.metric("Average Daily Total (min)", f"{avg_total:.0f}")
@@ -51,7 +58,7 @@ with col2:
               f"{most_productive_day['Razem']:.0f} min")
 
 with col3:
-    best_activity = df_filtered[utils.TIME_COLUMNS[:-1]].mean().idxmax()
+    best_activity = df_filtered[time_columns].mean().idxmax()
     best_activity_avg = df_filtered[best_activity].mean()
     st.metric("Most Time Spent On", 
               best_activity,
@@ -67,7 +74,7 @@ with col4:
 st.header("Daily Activity Breakdown")
 fig_daily = px.bar(df_filtered, 
                    x='Data', 
-                   y=utils.TIME_COLUMNS[:-1],
+                   y=time_columns,
                    title="Daily Activity Distribution",
                    labels={'value': 'Minutes', 'variable': 'Activity'})
 st.plotly_chart(fig_daily, use_container_width=True)
@@ -78,7 +85,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     # Pie chart of average time distribution
-    avg_distribution = df_filtered[utils.TIME_COLUMNS[:-1]].mean()
+    avg_distribution = df_filtered[time_columns].mean()
     fig_pie = px.pie(values=avg_distribution.values, 
                      names=avg_distribution.index,
                      title="Average Time Distribution")
@@ -86,8 +93,8 @@ with col1:
 
 with col2:
     # Weekly patterns
-    weekday_avg = df_filtered.groupby('WEEKDAY')[utils.TIME_COLUMNS[:-1]].mean()
-    weekday_avg = weekday_avg.reindex(utils.WEEKDAY_ORDER)
+    weekday_avg = df_filtered.groupby('WEEKDAY')[time_columns].mean()
+    weekday_avg = weekday_avg.reindex(config.WEEKDAY_ORDER)
     
     fig_weekly = px.bar(weekday_avg,
                         title="Average Activity by Weekday",
@@ -119,7 +126,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Activity Statistics (minutes)")
-    stats_df = df_filtered[utils.TIME_COLUMNS].describe()
+    stats_df = df_filtered[time_columns + ["Razem"]].describe()
     st.dataframe(stats_df.round(1))
 
 with col2:

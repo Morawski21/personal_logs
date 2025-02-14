@@ -23,7 +23,3 @@ def load_logbook_data():
             continue
     
     raise FileNotFoundError("Could not find or load Logbook 2025.xlsx in any known location")
-
-# Constants
-TIME_COLUMNS = ["Tech + Praca", "YouTube", "Czytanie", "Gitara", "Inne", "Razem"]
-WEEKDAY_ORDER = ['PONIEDZIAŁEK', 'WTOREK', 'ŚRODA', 'CZWARTEK', 'PIĄTEK', 'SOBOTA', 'NIEDZIELA']
