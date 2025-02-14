@@ -13,15 +13,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
-    - name: Debug working directory
-      run: |
-        pwd
-        ls -la
-        
-    - name: Create data directory with full path
-      run: |
-        mkdir -p "$GITHUB_WORKSPACE/data"
-        
     - name: Build Docker image
       run: |
         docker build -t personal-logs:latest .
@@ -37,6 +28,6 @@ jobs:
         docker run -d \
           --name personal-logs \
           --restart unless-stopped \
-          -v "$GITHUB_WORKSPACE/data":/app/data \
+          -v /Docker/personal-logs/data:/app/data \
           -p 8501:8501 \
           personal-logs:latest
