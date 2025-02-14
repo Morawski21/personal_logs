@@ -8,7 +8,7 @@ st.title("GitHub actions deployed this app")
 st.write("Current working directory:", os.getcwd())
 
 # Define path to the data directory and Excel file
-data_path = os.path.join('/app/data', 'Logbook 2025.xlsx')
+data_path = os.path.join('data', 'Logbook 2025.xlsx')
 
 try:
     # Load the Excel file
@@ -21,3 +21,7 @@ try:
         st.write("Contents of /app/data:", os.listdir('/app/data'))
 except Exception as e:
     st.error(f"Error loading Excel file: {str(e)}")
+
+st.dataframe(df.tail())
+
+st.write(df.columns.to_list())
