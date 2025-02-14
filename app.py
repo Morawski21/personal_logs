@@ -4,7 +4,7 @@ import datetime
 import os
 
 # Page config
-st.set_page_config(page_title="Daily Logbook", layout="wide")
+st.set_page_config(page_title="Logbook", layout="wide")
 st.title("Daily Logbook 2025")
 
 # Define path to the data directory and Excel file
