@@ -13,6 +13,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: Create data directory
+      run: |
+        mkdir -p data
+        
     - name: Build Docker image
       run: |
         docker build -t personal-logs:latest .
@@ -28,5 +32,6 @@ jobs:
         docker run -d \
           --name personal-logs \
           --restart unless-stopped \
+          -v $(pwd)/data:/app/data \
           -p 8501:8501 \
           personal-logs:latest
