@@ -5,7 +5,7 @@ import os
 
 # Page config
 st.set_page_config(page_title="Logbook", layout="wide")
-st.title("Daily Logbook 2025 test")
+st.title("Daily Logbook 2025")
 
 # Define possible data paths
 data_paths = [
@@ -36,9 +36,42 @@ else:
     if 'Data' in df.columns:
         df['Data'] = pd.to_datetime(df['Data']).dt.strftime('%d.%m.%Y')
 
-# Rest of your existing code remains the same until the save part
+# Create form for input
+st.header("Add New Daily Record")
 
-# When saving, use the loaded path or default to the first path
+# Create columns for better layout
+col1, col2, col3 = st.columns(3)
+
+# Initialize all form variables
+with col1:
+    st.subheader("Time Activities")
+    tech_praca = st.number_input("Tech + Praca (minutes)", min_value=0, value=0, key='tech_praca')
+    youtube = st.number_input("YouTube (minutes)", min_value=0, value=0, key='youtube')
+    czytanie = st.number_input("Czytanie (minutes)", min_value=0, value=0, key='czytanie')
+    gitara = st.number_input("Gitara (minutes)", min_value=0, value=0, key='gitara')
+    inne = st.number_input("Inne (minutes)", min_value=0, value=0, key='inne')
+
+    # Calculate total immediately
+    razem = tech_praca + youtube + czytanie + gitara + inne
+    st.write(f"Total time: {razem} minutes")
+
+with col2:
+    st.subheader("Daily Tasks")
+    clean_20min = st.checkbox("20min clean", key='clean')
+    ynab = st.checkbox("YNAB", key='ynab')
+    anki = st.checkbox("Anki", key='anki')
+    pamietnik = st.checkbox("Pamiętnik", key='pamietnik')
+    plan_jutro = st.checkbox("Plan na jutro", key='plan_jutro')
+    no_porn = st.checkbox("No porn", key='no_porn')
+    gaming = st.checkbox("Gaming <1h", key='gaming')
+
+with col3:
+    st.subheader("Additional Info")
+    sport = st.text_input("Sport", value="", key='sport')
+    accessories = st.text_input("Accessories", value="", key='accessories')
+    suplementy = st.text_input("Suplementy", value="", key='suplementy')
+
+# Add record button
 if st.button("Add Today's Record"):
     # Get today's date and weekday
     today = datetime.datetime.now()
@@ -83,3 +116,10 @@ if st.button("Add Today's Record"):
         st.success(f"Record added successfully to {save_path}!")
     except Exception as e:
         st.error(f"Error saving record: {str(e)}")
+
+# Display recent records
+st.header("Recent Records")
+if not df.empty:
+    st.dataframe(df.tail(7))
+else:
+    st.write("No records found in the logbook.")
