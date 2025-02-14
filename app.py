@@ -37,23 +37,23 @@ with col1:
     st.subheader("Time Activities")
     tech_praca = st.number_input("Tech + Praca (minutes)", 
                                 min_value=0, 
-                                value=int(today_record['Tech + Praca']) if today_record is not None else 0,
+                                value=int(today_record['Tech + Praca']) if today_record is not None and pd.notna(today_record['Tech + Praca']) else 0,
                                 key='tech_praca')
     youtube = st.number_input("YouTube (minutes)", 
                              min_value=0, 
-                             value=int(today_record['YouTube']) if today_record is not None else 0,
+                             value=int(today_record['YouTube']) if today_record is not None and pd.notna(today_record['YouTube']) else 0,
                              key='youtube')
     czytanie = st.number_input("Czytanie (minutes)", 
                               min_value=0, 
-                              value=int(today_record['Czytanie']) if today_record is not None else 0,
+                              value=int(today_record['Czytanie']) if today_record is not None and pd.notna(today_record['Czytanie']) else 0,
                               key='czytanie')
     gitara = st.number_input("Gitara (minutes)", 
                             min_value=0, 
-                            value=int(today_record['Gitara']) if today_record is not None else 0,
+                            value=int(today_record['Gitara']) if today_record is not None and pd.notna(today_record['Gitara']) else 0,
                             key='gitara')
     inne = st.number_input("Inne (minutes)", 
                           min_value=0, 
-                          value=int(today_record['Inne']) if today_record is not None else 0,
+                          value=int(today_record['Inne']) if today_record is not None and pd.notna(today_record['Inne']) else 0,
                           key='inne')
 
     # Calculate total immediately
