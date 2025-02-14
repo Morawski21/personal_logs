@@ -15,17 +15,17 @@ jobs:
     
     - name: Build Docker image
       run: |
-        docker build -t streamlit-app .
+        docker build -t personal-logs:latest .
         
     - name: Stop existing container
       run: |
-        docker stop streamlit-app || true
-        docker rm streamlit-app || true
+        docker stop personal-logs || true
+        docker rm personal-logs || true
       continue-on-error: true
         
     - name: Run Docker container
       run: |
         docker run -d \
-          --name streamlit-app \
+          --name personal-logs \
           -p 8501:8501 \
-          streamlit-app
+          personal-logs:latest
