@@ -22,6 +22,35 @@ except FileNotFoundError as e:
     df = pd.DataFrame()
     loaded_path = utils.get_data_paths()[0]  # Default to first path for saving
 
+# Calculate streaks
+anki_streak = utils.calculate_streak(df[::-1], 'Anki')
+youtube_streak = utils.calculate_streak(df[::-1], 'YouTube', 20)
+reading_streak = utils.calculate_streak(df[::-1], 'Czytanie', 20)
+guitar_streak = utils.calculate_streak(df[::-1], 'Gitara', 20)
+
+# Display streaks at the top
+st.markdown("### Streaks")
+st.markdown(f"""
+    <div style="display: flex; justify-content: space-around;">
+        <div style="text-align: center; color: #4A90E2;">
+            <h5>Anki</h5>
+            <p style="font-size: 16px;">{anki_streak} days</p>
+        </div>
+        <div style="text-align: center; color: #FF4500;">
+            <h5>YouTube</h5>
+            <p style="font-size: 16px;">{youtube_streak} days</p>
+        </div>
+        <div style="text-align: center; color: #FFD700;">
+            <h5>Reading</h5>
+            <p style="font-size: 16px;">{reading_streak} days</p>
+        </div>
+        <div style="text-align: center; color: #8A2BE2;">
+            <h5>Guitar</h5>
+            <p style="font-size: 16px;">{guitar_streak} days</p>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
 # Get today's record if it exists
 today = datetime.datetime.now()
 today_str = today.strftime('%d.%m.%Y')
