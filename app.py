@@ -124,7 +124,8 @@ if st.button(button_text):
     
     if today_record is not None:
         # Update existing record
-        df.loc[df['Data'] == today_str] = new_record
+        df = df[df['Data'] != today_str]  # Remove the old record
+        df = pd.concat([df, pd.DataFrame([new_record])], ignore_index=True)  # Add the updated record
     else:
         # Add new record
         df = pd.concat([df, pd.DataFrame([new_record])], ignore_index=True)
