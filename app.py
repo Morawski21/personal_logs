@@ -5,7 +5,7 @@ import os
 
 # Page config
 st.set_page_config(page_title="Logbook", layout="wide")
-st.title("Daily Logbook 2025")
+st.title("Daily Logbook 2025 test")
 
 # Define possible data paths
 data_paths = [
