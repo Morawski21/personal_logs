@@ -28,6 +28,6 @@ jobs:
         docker run -d \
           --name personal-logs \
           --restart unless-stopped \
-          -v /Docker/personal-logs/data:/app/data \
+          -v /docker/personal-logs/data:/app/data \
           -p 8501:8501 \
           personal-logs:latest
