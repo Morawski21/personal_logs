@@ -15,9 +15,8 @@ jobs:
     
     - name: Debug paths
       run: |
-        ls -la /docker
-        ls -la /docker/personal-logs || echo "personal-logs dir not found"
-        ls -la /docker/personal-logs/data || echo "data dir not found"
+        ls -la /volume1/docker || echo "Not in volume1"
+        ls -la /volume2/docker || echo "Not in volume2"
         
     - name: Build Docker image
       run: |
@@ -34,6 +33,6 @@ jobs:
         docker run -d \
           --name personal-logs \
           --restart unless-stopped \
-          -v /docker/personal-logs/data:/app/data \
+          -v /volume1/docker/personal-logs/data:/app/data \
           -p 8501:8501 \
           personal-logs:latest
