@@ -1,22 +1,16 @@
 import streamlit as st
-import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-import os
-import calendar
+import utils
 
 st.set_page_config(page_title="Logbook Analytics", layout="wide")
 st.title("Productivity Analytics")
 
-# Define time-based columns
-TIME_COLUMNS = ["Tech + Praca", "YouTube", "Czytanie", "Gitara", "Inne", "Razem"]
-
-# Load data
-data_path = os.path.join('data', 'Logbook 2025.xlsx')
+# Load data using shared functionality
 try:
-    df = pd.read_excel(data_path)
-    df['Data'] = pd.to_datetime(df['Data'], format='%d.%m.%Y')
+    df, loaded_path = utils.load_logbook_data()
+    st.success(f"Data loaded successfully from: {loaded_path}")
 except Exception as e:
     st.error(f"Error loading data: {str(e)}")
     st.stop()
@@ -57,7 +51,7 @@ with col2:
               f"{most_productive_day['Razem']:.0f} min")
 
 with col3:
-    best_activity = df_filtered[TIME_COLUMNS[:-1]].mean().idxmax()
+    best_activity = df_filtered[utils.TIME_COLUMNS[:-1]].mean().idxmax()
     best_activity_avg = df_filtered[best_activity].mean()
     st.metric("Most Time Spent On", 
               best_activity,
@@ -73,7 +67,7 @@ with col4:
 st.header("Daily Activity Breakdown")
 fig_daily = px.bar(df_filtered, 
                    x='Data', 
-                   y=TIME_COLUMNS[:-1],  # Excluding Razem
+                   y=utils.TIME_COLUMNS[:-1],
                    title="Daily Activity Distribution",
                    labels={'value': 'Minutes', 'variable': 'Activity'})
 st.plotly_chart(fig_daily, use_container_width=True)
@@ -84,7 +78,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     # Pie chart of average time distribution
-    avg_distribution = df_filtered[TIME_COLUMNS[:-1]].mean()
+    avg_distribution = df_filtered[utils.TIME_COLUMNS[:-1]].mean()
     fig_pie = px.pie(values=avg_distribution.values, 
                      names=avg_distribution.index,
                      title="Average Time Distribution")
@@ -92,10 +86,8 @@ with col1:
 
 with col2:
     # Weekly patterns
-    weekday_avg = df_filtered.groupby('WEEKDAY')[TIME_COLUMNS[:-1]].mean()
-    # Ensure proper weekday order
-    weekday_order = ['PONIEDZIAŁEK', 'WTOREK', 'ŚRODA', 'CZWARTEK', 'PIĄTEK', 'SOBOTA', 'NIEDZIELA']
-    weekday_avg = weekday_avg.reindex(weekday_order)
+    weekday_avg = df_filtered.groupby('WEEKDAY')[utils.TIME_COLUMNS[:-1]].mean()
+    weekday_avg = weekday_avg.reindex(utils.WEEKDAY_ORDER)
     
     fig_weekly = px.bar(weekday_avg,
                         title="Average Activity by Weekday",
@@ -104,7 +96,6 @@ with col2:
 
 # Trends over time
 st.header("Productivity Trends")
-# Calculate 7-day rolling average
 df_filtered['7_day_avg'] = df_filtered['Razem'].rolling(7).mean()
 
 fig_trend = go.Figure()
@@ -128,7 +119,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Activity Statistics (minutes)")
-    stats_df = df_filtered[TIME_COLUMNS].describe()
+    stats_df = df_filtered[utils.TIME_COLUMNS].describe()
     st.dataframe(stats_df.round(1))
 
 with col2:

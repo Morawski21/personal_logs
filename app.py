@@ -2,39 +2,24 @@ import streamlit as st
 import pandas as pd
 import datetime
 import os
+import utils
 
 # Page config
 st.set_page_config(page_title="Logbook", layout="wide")
 st.title("Daily Logbook 2025")
 
-# Define possible data paths
-data_paths = [
-    os.path.join('data', 'Logbook 2025.xlsx'),  # Local development path
-    os.path.join('/app/data', 'Logbook 2025.xlsx'),  # Docker container path
-]
-
 # Load existing data
-df = None
-loaded_path = None
-
-for path in data_paths:
-    try:
-        if os.path.exists(path):
-            df = pd.read_excel(path)
-            loaded_path = path
-            st.success(f"Excel file loaded successfully from: {path}")
-            break
-    except Exception as e:
-        continue
-
-if df is None:
-    st.error("Could not load Excel file from any known location. Creating new DataFrame.")
-    st.warning("Make sure 'Logbook 2025.xlsx' exists in the data directory")
-    df = pd.DataFrame()
-else:
+try:
+    df, loaded_path = utils.load_logbook_data()
+    st.success(f"Excel file loaded successfully from: {loaded_path}")
     # Convert any datetime columns to DD.MM.YYYY format
     if 'Data' in df.columns:
-        df['Data'] = pd.to_datetime(df['Data']).dt.strftime('%d.%m.%Y')
+        df['Data'] = df['Data'].dt.strftime('%d.%m.%Y')
+except FileNotFoundError as e:
+    st.error(str(e))
+    st.warning("Creating new DataFrame")
+    df = pd.DataFrame()
+    loaded_path = utils.get_data_paths()[0]  # Default to first path for saving
 
 # Create form for input
 st.header("Add New Daily Record")
@@ -105,15 +90,12 @@ if st.button("Add Today's Record"):
     df = pd.concat([df, pd.DataFrame([new_record])], ignore_index=True)
     
     try:
-        # Use the path where we successfully loaded the file, or default to first path
-        save_path = loaded_path if loaded_path else data_paths[0]
-        
         # Ensure the directory exists
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        os.makedirs(os.path.dirname(loaded_path), exist_ok=True)
         
         # Save updated DataFrame to Excel
-        df.to_excel(save_path, index=False)
-        st.success(f"Record added successfully to {save_path}!")
+        df.to_excel(loaded_path, index=False)
+        st.success(f"Record added successfully to {loaded_path}!")
     except Exception as e:
         st.error(f"Error saving record: {str(e)}")
 
