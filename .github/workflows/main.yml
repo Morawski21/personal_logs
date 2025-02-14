@@ -1,0 +1,31 @@
+name: Build and Deploy Streamlit App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Build Docker image
+      run: |
+        docker build -t streamlit-app .
+        
+    - name: Stop existing container
+      run: |
+        docker stop streamlit-app || true
+        docker rm streamlit-app || true
+      continue-on-error: true
+        
+    - name: Run Docker container
+      run: |
+        docker run -d \
+          --name streamlit-app \
+          -p 8501:8501 \
+          streamlit-app
