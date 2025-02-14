@@ -13,6 +13,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: Debug paths
+      run: |
+        ls -la /docker
+        ls -la /docker/personal-logs || echo "personal-logs dir not found"
+        ls -la /docker/personal-logs/data || echo "data dir not found"
+        
     - name: Build Docker image
       run: |
         docker build -t personal-logs:latest .
