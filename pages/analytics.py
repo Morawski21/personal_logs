@@ -72,11 +72,23 @@ with col4:
 
 # Daily breakdown
 st.header("Daily Activity Breakdown")
-fig_daily = px.bar(df_filtered, 
-                   x='Data', 
-                   y=time_columns,
-                   title="Daily Activity Distribution",
-                   labels={'value': 'Minutes', 'variable': 'Activity'})
+fig_daily = go.Figure()
+
+for column in time_columns:
+    fig_daily.add_trace(go.Bar(
+        x=df_filtered['Data'],
+        y=df_filtered[column],
+        name=column
+    ))
+
+fig_daily.update_layout(
+    barmode='stack',
+    title="Daily Activity Distribution",
+    xaxis_title="Date",
+    yaxis_title="Minutes",
+    legend_title="Activity"
+)
+
 st.plotly_chart(fig_daily, use_container_width=True)
 
 # Activity distribution

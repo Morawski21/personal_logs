@@ -133,6 +133,6 @@ if st.button(button_text):
 # Display recent records
 st.header("Recent Records")
 if not df.empty:
-    st.dataframe(df.tail(7))
+    st.dataframe(df[['Data'] + [col for col in df.columns if col != 'Data']].tail(7))
 else:
     st.write("No records found in the logbook.")
