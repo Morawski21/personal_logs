@@ -51,10 +51,10 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# Get today's record if it exists
-today = datetime.datetime.now()
-today_str = today.strftime('%d.%m.%Y')
-today_record = df[df['Data'] == today_str].iloc[0] if not df.empty and (df['Data'] == today_str).any() else None
+# Date selector for editing records
+selected_date = st.date_input("Select a date to edit", datetime.datetime.now())
+selected_date_str = selected_date.strftime('%d.%m.%Y')
+selected_record = df[df['Data'] == selected_date_str].iloc[0] if not df.empty and (df['Data'] == selected_date_str).any() else None
 
 # Get active fields configuration
 active_fields = config.get_active_fields()
@@ -64,7 +64,7 @@ time_columns = [field for field in active_fields if field not in ["20min clean",
 df = df[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
 
 # Create form for input
-st.header("Add/Update Today's Record")
+st.header("Add/Update Record")
 
 # Create columns for better layout
 col1, col2, col3 = st.columns(3)
@@ -76,7 +76,7 @@ with col1:
         if active_fields.get(field):
             st.number_input(f"{field} (minutes)", 
                             min_value=0, 
-                            value=int(today_record[field]) if today_record is not None and pd.notna(today_record[field]) else 0,
+                            value=int(selected_record[field]) if selected_record is not None and pd.notna(selected_record[field]) else 0,
                             key=field.lower().replace(" ", "_"))
 
     # Calculate total immediately
@@ -88,7 +88,7 @@ with col2:
     for field in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h"]:
         if active_fields.get(field):
             st.checkbox(field, 
-                        value=bool(today_record[field]) if today_record is not None else False,
+                        value=bool(selected_record[field]) if selected_record is not None else False,
                         key=field.lower().replace(" ", "_"))
 
 with col3:
@@ -96,25 +96,25 @@ with col3:
     for field in ["sport", "accessories", "suplementy"]:
         if active_fields.get(field):
             st.text_input(field.capitalize(), 
-                          value=str(today_record[field]) if today_record is not None and pd.notna(today_record[field]) else "",
+                          value=str(selected_record[field]) if selected_record is not None and pd.notna(selected_record[field]) else "",
                           key=field.lower().replace(" ", "_"))
 
 # Add/Update record button
-button_text = "Update Today's Record" if today_record is not None else "Add Today's Record"
+button_text = "Update Record" if selected_record is not None else "Add Record"
 if st.button(button_text):
-    weekday = today.strftime('%A').upper()
+    weekday = selected_date.strftime('%A').upper()
     
     new_record = {
-        'Data': today_str,
+        'Data': selected_date_str,
         'WEEKDAY': weekday,
         'Razem': razem
     }
     for field in active_fields:
         new_record[field] = st.session_state[field.lower().replace(" ", "_")]
 
-    if today_record is not None:
+    if selected_record is not None:
         # Update existing record
-        df = df[df['Data'] != today_str]  # Remove the old record
+        df = df[df['Data'] != selected_date_str]  # Remove the old record
         df = pd.concat([df, pd.DataFrame([new_record])], ignore_index=True)  # Add the updated record
     else:
         # Add new record
@@ -126,7 +126,7 @@ if st.button(button_text):
         
         # Save updated DataFrame to Excel
         df.to_excel(loaded_path, index=False)
-        st.success(f"Record {'updated' if today_record is not None else 'added'} successfully in {loaded_path}!")
+        st.success(f"Record {'updated' if selected_record is not None else 'added'} successfully in {loaded_path}!")
     except Exception as e:
         st.error(f"Error saving record: {str(e)}")
 
