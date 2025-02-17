@@ -6,7 +6,11 @@ from datetime import datetime, timedelta
 import utils
 import numpy as np
 
-st.set_page_config(page_title="Habit Streaks", layout="wide")
+st.set_page_config(
+    page_title="Habit Streaks", 
+    layout="wide",
+    page_icon="icon.png"
+)
 
 # Add CSS to hide delta arrows
 st.write(
@@ -101,7 +105,6 @@ for idx, habit in enumerate(ROW1_HABITS):
             )
 
 # Second row
-st.write("**20+ Minute Activities**")
 cols2 = st.columns(3)
 for idx, habit in enumerate(ROW2_HABITS):
     binary_habit = f'{habit}_binary'

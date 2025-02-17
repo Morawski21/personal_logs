@@ -6,7 +6,11 @@ import utils
 import config
 import pandas as pd
 
-st.set_page_config(page_title="Logbook Analytics", layout="wide")
+st.set_page_config(
+    page_title="Logbook Analytics", 
+    layout="wide",
+    page_icon="icon.png"
+)
 
 # Define today at the start
 today = datetime.now()
