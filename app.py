@@ -8,18 +8,23 @@ import pandas as pd
 
 st.set_page_config(page_title="Logbook Analytics", layout="wide")
 
+# Define today at the start
+today = datetime.now()
+
 # Load data using shared functionality
 try:
     df, loaded_path = utils.load_logbook_data()
+    # Filter out future dates
+    df = df[df['Data'] <= today]
     #st.success(f"Data loaded successfully from: {loaded_path}")
 except Exception as e:
     st.error(f"Error loading data: {str(e)}")
     st.stop()
 
 # Filter data for the last 7 days and the previous 7 days
-today = datetime.now()
 df_last_7_days = df[df['Data'] >= (today - timedelta(days=7))]
 df_previous_7_days = df[(df['Data'] >= (today - timedelta(days=14))) & (df['Data'] < (today - timedelta(days=7)))]
+
 # Main metrics
 st.header("Last week vs. Previous week")
 col1, col2, col3 = st.columns(3)
@@ -62,8 +67,12 @@ with col3:
 # Filter data for the last 30 days
 df_last_30_days = df[df['Data'] >= (today - timedelta(days=30))]
 
-# Ensure all dates within the last 30 days are present
-date_range = pd.date_range(start=df_last_30_days['Data'].min(), end=df_last_30_days['Data'].max(), freq='D')
+# Ensure all dates within the last 30 days are present, excluding future dates
+date_range = pd.date_range(
+    start=df_last_30_days['Data'].min(),
+    end=min(df_last_30_days['Data'].max(), today),
+    freq='D'
+)
 df_last_30_days = df_last_30_days.set_index('Data').reindex(date_range).fillna(0).reset_index().rename(columns={'index': 'Data'})
 
 # Daily breakdown with trend line for the last 30 days
