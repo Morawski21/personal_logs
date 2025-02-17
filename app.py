@@ -1,138 +1,99 @@
 import streamlit as st
-import pandas as pd
-import datetime
-import os
+import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime, timedelta
 import utils
 import config
+import pandas as pd
 
-# Page config
-st.set_page_config(page_title="Personal Logbook", layout="wide")
-st.title("Personal Logbook")
+st.set_page_config(page_title="Logbook Analytics", layout="wide")
 
-# Load existing data
+# Load data using shared functionality
 try:
     df, loaded_path = utils.load_logbook_data()
-    st.success(f"Data loaded successfully from: {loaded_path}")
-    # Convert any datetime columns to DD.MM.YYYY format for display
-    if 'Data' in df.columns:
-        df['Data'] = df['Data'].dt.strftime('%d.%m.%Y')
-except FileNotFoundError as e:
-    st.error(str(e))
-    st.warning("Creating new DataFrame")
-    df = pd.DataFrame()
-    loaded_path = utils.get_data_paths()[0]  # Default to first path for saving
+    #st.success(f"Data loaded successfully from: {loaded_path}")
+except Exception as e:
+    st.error(f"Error loading data: {str(e)}")
+    st.stop()
 
-# Calculate streaks
-anki_streak = utils.calculate_streak(df[::-1], 'Anki')
-youtube_streak = utils.calculate_streak(df[::-1], 'YouTube', 20)
-reading_streak = utils.calculate_streak(df[::-1], 'Czytanie', 20)
-guitar_streak = utils.calculate_streak(df[::-1], 'Gitara', 20)
+# Filter data for the last 7 days and the previous 7 days
+today = datetime.now()
+df_last_7_days = df[df['Data'] >= (today - timedelta(days=7))]
+df_previous_7_days = df[(df['Data'] >= (today - timedelta(days=14))) & (df['Data'] < (today - timedelta(days=7)))]
+# Main metrics
+st.header("Last week vs. Previous week")
+col1, col2, col3 = st.columns(3)
 
-# Display streaks at the top
-st.markdown("### Streaks")
-st.markdown(f"""
-    <div style="display: flex; justify-content: space-around;">
-        <div style="text-align: center; color: #4A90E2;">
-            <h5>Anki</h5>
-            <p style="font-size: 16px;">{anki_streak} days</p>
-        </div>
-        <div style="text-align: center; color: #FF4500;">
-            <h5>YouTube</h5>
-            <p style="font-size: 16px;">{youtube_streak} days</p>
-        </div>
-        <div style="text-align: center; color: #FFD700;">
-            <h5>Reading</h5>
-            <p style="font-size: 16px;">{reading_streak} days</p>
-        </div>
-        <div style="text-align: center; color: #8A2BE2;">
-            <h5>Guitar</h5>
-            <p style="font-size: 16px;">{guitar_streak} days</p>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
-
-# Date selector for editing records
-selected_date = st.date_input("Select a date to edit", datetime.datetime.now())
-selected_date_str = selected_date.strftime('%d.%m.%Y')
-selected_record = df[df['Data'] == selected_date_str].iloc[0] if not df.empty and (df['Data'] == selected_date_str).any() else None
-
-# Get active fields configuration
 active_fields = config.get_active_fields()
 time_columns = [field for field in active_fields if field not in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h", "sport", "accessories", "suplementy"]]
 
 # Filter dataframe to include only active fields
-df = df[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
+df_last_7_days = df_last_7_days[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
+df_previous_7_days = df_previous_7_days[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
 
-# Create form for input
-st.header("Add/Update Record")
+# Calculate metrics for the current period
+avg_total = df_last_7_days['Razem'].mean()
+most_productive_day = df_last_7_days.loc[df_last_7_days['Razem'].idxmax()]
+total_productive_hours = df_last_7_days['Razem'].sum() / 60
 
-# Create columns for better layout
-col1, col2, col3 = st.columns(3)
+# Calculate metrics for the previous period
+avg_total_prev = df_previous_7_days['Razem'].mean() if not df_previous_7_days.empty else 0
+most_productive_day_prev = df_previous_7_days['Razem'].max() if not df_previous_7_days.empty else 0
+total_productive_hours_prev = df_previous_7_days['Razem'].sum() / 60 if not df_previous_7_days.empty else 0
 
-# Initialize all form variables with existing values if available
+# Calculate percentage changes
+avg_total_change = ((avg_total - avg_total_prev) / avg_total_prev * 100) if avg_total_prev != 0 else 0
+most_productive_day_change = ((most_productive_day['Razem'] - most_productive_day_prev) / most_productive_day_prev * 100) if most_productive_day_prev != 0 else 0
+total_productive_hours_change = ((total_productive_hours - total_productive_hours_prev) / total_productive_hours_prev * 100) if total_productive_hours_prev != 0 else 0
+
 with col1:
-    st.subheader("Time Activities")
-    for field in ["Tech + Praca", "YouTube", "Czytanie", "Gitara", "Inne"]:
-        if active_fields.get(field):
-            st.number_input(f"{field} (minutes)", 
-                            min_value=0, 
-                            value=int(selected_record[field]) if selected_record is not None and pd.notna(selected_record[field]) else 0,
-                            key=field.lower().replace(" ", "_"))
-
-    # Calculate total immediately
-    razem = sum(st.session_state[field.lower().replace(" ", "_")] for field in ["Tech + Praca", "YouTube", "Czytanie", "Gitara", "Inne"] if active_fields.get(field))
-    st.write(f"Total time: {razem} minutes")
+    st.metric("Average Daily Total (min)", f"{avg_total:.0f}", f"{avg_total_change:.1f}%")
 
 with col2:
-    st.subheader("Daily Tasks")
-    for field in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h"]:
-        if active_fields.get(field):
-            st.checkbox(field, 
-                        value=bool(selected_record[field]) if selected_record is not None else False,
-                        key=field.lower().replace(" ", "_"))
+    st.metric("Most Productive Day (min)", 
+              f"{most_productive_day['Razem']:.0f}", 
+              f"{most_productive_day_change:.1f}%")
 
 with col3:
-    st.subheader("Additional Info")
-    for field in ["sport", "accessories", "suplementy"]:
-        if active_fields.get(field):
-            st.text_input(field.capitalize(), 
-                          value=str(selected_record[field]) if selected_record is not None and pd.notna(selected_record[field]) else "",
-                          key=field.lower().replace(" ", "_"))
+    st.metric("Total Productive Hours", 
+              f"{total_productive_hours:.1f}", 
+              f"{total_productive_hours_change:.1f}%")
 
-# Add/Update record button
-button_text = "Update Record" if selected_record is not None else "Add Record"
-if st.button(button_text):
-    weekday = selected_date.strftime('%A').upper()
-    
-    new_record = {
-        'Data': selected_date_str,
-        'WEEKDAY': weekday,
-        'Razem': razem
-    }
-    for field in active_fields:
-        new_record[field] = st.session_state[field.lower().replace(" ", "_")]
+# Filter data for the last 30 days
+df_last_30_days = df[df['Data'] >= (today - timedelta(days=30))]
 
-    if selected_record is not None:
-        # Update existing record
-        df = df[df['Data'] != selected_date_str]  # Remove the old record
-        df = pd.concat([df, pd.DataFrame([new_record])], ignore_index=True)  # Add the updated record
-    else:
-        # Add new record
-        df = pd.concat([df, pd.DataFrame([new_record])], ignore_index=True)
-    
-    try:
-        # Ensure the directory exists
-        os.makedirs(os.path.dirname(loaded_path), exist_ok=True)
-        
-        # Save updated DataFrame to Excel
-        df.to_excel(loaded_path, index=False)
-        st.success(f"Record {'updated' if selected_record is not None else 'added'} successfully in {loaded_path}!")
-    except Exception as e:
-        st.error(f"Error saving record: {str(e)}")
+# Ensure all dates within the last 30 days are present
+date_range = pd.date_range(start=df_last_30_days['Data'].min(), end=df_last_30_days['Data'].max(), freq='D')
+df_last_30_days = df_last_30_days.set_index('Data').reindex(date_range).fillna(0).reset_index().rename(columns={'index': 'Data'})
 
-# Display recent records
-st.header("Recent Records")
-if not df.empty:
-    st.dataframe(df[['Data'] + [col for col in df.columns if col != 'Data']].tail(7))
-else:
-    st.write("No records found in the logbook.")
+# Daily breakdown with trend line for the last 30 days
+st.header("Daily Activity Breakdown and Trends (Last 30 Days)")
+df_last_30_days['7_day_avg'] = df_last_30_days['Razem'].rolling(7, min_periods=1).mean()
+
+fig_daily_trend = go.Figure()
+
+for column in time_columns:
+    fig_daily_trend.add_trace(go.Bar(
+        x=df_last_30_days['Data'],
+        y=df_last_30_days[column],
+        name=column
+    ))
+
+fig_daily_trend.add_trace(go.Scatter(
+    x=df_last_30_days['Data'],
+    y=df_last_30_days['7_day_avg'],
+    mode='lines',
+    name='7-day Average',
+    line=dict(width=3, dash='dot', color='red')
+))
+
+fig_daily_trend.update_layout(
+    barmode='stack',
+    title="Daily Activity Distribution and 7-day Average Trend (Last 30 Days)",
+    xaxis_title="Date",
+    yaxis_title="Minutes",
+    legend_title="Activity",
+    xaxis=dict(tickformat="%Y-%m-%d")
+)
+
+st.plotly_chart(fig_daily_trend, use_container_width=True)
