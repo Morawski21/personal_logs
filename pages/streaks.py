@@ -38,6 +38,16 @@ ROW1_HABITS = ['Anki', 'Pamiętnik', 'YNAB']
 ROW2_HABITS = ['YouTube', 'Gitara', 'Czytanie']
 HABITS = ROW1_HABITS + ROW2_HABITS
 
+# Define habit emojis
+HABIT_EMOJIS = {
+    'Anki': '🧠',  # Brain for learning
+    'Pamiętnik': '📔',  # Notebook for journaling
+    'YNAB': '💰',  # Money for finance
+    'YouTube': '🎥',  # Camera for video content
+    'Gitara': '🎸',  # Guitar
+    'Czytanie': '📚',  # Books for reading
+}
+
 # Convert duration habits to binary based on 20-minute threshold
 for habit in ROW2_HABITS:
     df[f'{habit}_binary'] = (df[habit] >= 20).astype(float)
@@ -72,39 +82,34 @@ def calculate_longest_streak(series):
             continue
     return max_streak
 
-# Create metrics for each habit in two rows
-st.subheader("Habit Streaks")
+# Create metrics for each habit
+st.header("🎯 Habit Streaks")
 
-# First row
-st.write("**Daily Habits**")
 cols1 = st.columns(3)
 for idx, habit in enumerate(ROW1_HABITS):
     current_streak = calculate_current_streak(df[habit])
     longest_streak = calculate_longest_streak(df[habit])
     
     with cols1[idx]:
-        st.caption(habit)
-        subcol1, subcol2 = st.columns(2)
-        with subcol1:
-            st.metric(
-                label="Current streak", 
-                value=f"{current_streak}d",
-                label_visibility="collapsed",
-                delta="Record-breaking 💥" if current_streak >= longest_streak and current_streak > 0 
-                      else "Active 🔥" if current_streak > 0 else None,
-                delta_color="normal" if current_streak >= longest_streak and current_streak > 0 
-                           else "normal"
-            )
-        with subcol2:
-            st.metric(
-                label="Best streak",
-                value=f"{longest_streak}d",
-                label_visibility="collapsed",
-                delta="Best 🏆",
-                delta_color="off"
-            )
+        with st.expander(f"{HABIT_EMOJIS[habit]} {habit}", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(
+                    label="Current streak", 
+                    value=f"{current_streak}d",
+                    delta="Record-breaking 💥" if current_streak >= longest_streak and current_streak > 0 
+                          else "Active 🔥" if current_streak > 0 else None,
+                    delta_color="normal" if current_streak >= longest_streak and current_streak > 0 
+                               else "normal"
+                )
+            with col2:
+                st.metric(
+                    label="Best streak",
+                    value=f"{longest_streak}d",
+                    delta="Best 🏆",
+                    delta_color="off"
+                )
 
-# Second row
 cols2 = st.columns(3)
 for idx, habit in enumerate(ROW2_HABITS):
     binary_habit = f'{habit}_binary'
@@ -112,29 +117,30 @@ for idx, habit in enumerate(ROW2_HABITS):
     longest_streak = calculate_longest_streak(df[binary_habit])
     
     with cols2[idx]:
-        st.caption(habit)
-        subcol1, subcol2 = st.columns(2)
-        with subcol1:
-            st.metric(
-                label="Current streak", 
-                value=f"{current_streak}d",
-                label_visibility="collapsed",
-                delta="Record-breaking 💥" if current_streak >= longest_streak and current_streak > 0 
-                      else "Active 🔥" if current_streak > 0 else None,
-                delta_color="normal" if current_streak >= longest_streak and current_streak > 0 
-                           else "normal"
-            )
-        with subcol2:
-            st.metric(
-                label="Best streak",
-                value=f"{longest_streak}d",
-                label_visibility="collapsed",
-                delta="Best 🏆",
-                delta_color="off"
-            )
+        with st.expander(f"{HABIT_EMOJIS[habit]} {habit}", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(
+                    label="Current streak", 
+                    value=f"{current_streak}d",
+                    delta="Record-breaking 💥" if current_streak >= longest_streak and current_streak > 0 
+                          else "Active 🔥" if current_streak > 0 else None,
+                    delta_color="normal" if current_streak >= longest_streak and current_streak > 0 
+                               else "normal"
+                )
+            with col2:
+                st.metric(
+                    label="Best streak",
+                    value=f"{longest_streak}d",
+                    delta="Best 🏆",
+                    delta_color="off"
+                )
+
+st.markdown("---")  # Add separator
 
 # Create calendar heatmaps
-st.subheader("Habit Completion Calendar")
+st.subheader("📅 Habit Completion Calendar")
+
 
 # Prepare data for heatmap
 last_6_months = datetime.now() - timedelta(days=180)
