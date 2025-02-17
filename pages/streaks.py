@@ -8,6 +8,18 @@ import numpy as np
 
 st.set_page_config(page_title="Habit Streaks", layout="wide")
 
+# Add CSS to hide delta arrows
+st.write(
+    """
+    <style>
+    [data-testid="stMetricDelta"] svg {
+        display: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # Load data using shared functionality
 try:
     df, loaded_path = utils.load_logbook_data()
