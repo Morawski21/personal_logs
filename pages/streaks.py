@@ -56,41 +56,46 @@ for habit in ROW2_HABITS:
 
 def calculate_current_streak(series):
     """Calculate the current streak from a series of values."""
-    # Convert the series to a list for easier reverse iteration
-    values = series.fillna(0).values.tolist()
+    # Convert all values to float and handle both binary and duration-based habits
+    values = series.astype(float).values
     
-    # If the list is empty, return 0
-    if not values:
-        return 0
-        
-    # Check if the most recent value is 1 (completed)
-    if values[-1] == 1:
-        current_streak = 1  # Start with 1 for today's completion
-        
-        # Count backwards from second-to-last entry
-        for val in reversed(values[:-1]):
-            if val == 1:
-                current_streak += 1
-            else:
-                break
-    else:
-        current_streak = 0
-        
+    # For duration habits, convert to binary based on 20min threshold
+    if values.max() > 1:  # If we find values > 1, this is a duration-based habit
+        values = (values >= 20).astype(float)
+    
+    # Start from the most recent day and count backwards
+    current_streak = 0
+    for val in values[::-1]:
+        if val >= 1:  # Consider both 1.0 and any value >= 1 as success
+            current_streak += 1
+        elif val == 0:  # Break on explicit 0
+            break
+        else:  # Skip NaN values
+            continue
+            
     return current_streak
 
 def calculate_longest_streak(series):
     """Calculate the longest streak from a series of values."""
+    # Convert all values to float and handle both binary and duration-based habits
+    values = series.astype(float).values
+    
+    # For duration habits, convert to binary based on 20min threshold
+    if values.max() > 1:  # If we find values > 1, this is a duration-based habit
+        values = (values >= 20).astype(float)
+    
     max_streak = 0
     current = 0
-    for val in series:
-        if val == 1:
+    
+    for val in values:
+        if val >= 1:  # Consider both 1.0 and any value >= 1 as success
             current += 1
             max_streak = max(max_streak, current)
-        elif val == 0:
+        elif val == 0:  # Break on explicit 0
             current = 0
-        # Skip NA values
-        elif pd.isna(val):
+        else:  # Skip NaN values
             continue
+            
     return max_streak
 
 # Create metrics for each habit
