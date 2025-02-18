@@ -56,22 +56,42 @@ for habit in ROW2_HABITS:
 
 def calculate_current_streak(series):
     """Calculate the current streak from a series of values."""
-    # Convert all values to float and handle both binary and duration-based habits
+    # Convert series to float, keeping NaN values as NaN
     values = series.astype(float).values
     
     # For duration habits, convert to binary based on 20min threshold
     if values.max() > 1:  # If we find values > 1, this is a duration-based habit
-        values = (values >= 20).astype(float)
+        values = np.where(values >= 20, 1.0, values)  # Keep NaN as NaN
     
-    # Start from the most recent day and count backwards
-    current_streak = 0
-    for val in values[::-1]:
-        if val >= 1:  # Consider both 1.0 and any value >= 1 as success
-            current_streak += 1
-        elif val == 0:  # Break on explicit 0
-            break
-        else:  # Skip NaN values
-            continue
+    # If the most recent day is NaN, look at the previous days
+    if pd.isna(values[-1]):
+        # Find the last non-NaN value's index
+        last_valid_idx = len(values) - 1
+        while last_valid_idx >= 0 and pd.isna(values[last_valid_idx]):
+            last_valid_idx -= 1
+            
+        if last_valid_idx >= 0 and values[last_valid_idx] >= 1:
+            current_streak = 1  # Start counting from the last valid day
+            # Continue counting backwards
+            for val in values[last_valid_idx-1::-1]:
+                if val >= 1:
+                    current_streak += 1
+                elif val == 0:
+                    break
+                # Skip other NaN values
+        else:
+            current_streak = 0
+    else:
+        # Original logic for non-NaN current day
+        current_streak = 0
+        for val in values[::-1]:
+            if val >= 1:
+                current_streak += 1
+            elif val == 0:
+                break
+            # Skip NaN values
+            else:
+                continue
             
     return current_streak
 
