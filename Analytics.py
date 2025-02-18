@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import utils
 import config
 import pandas as pd
+from balance import calculate_balance_score
 
 st.set_page_config(
     page_title="Analytics",
