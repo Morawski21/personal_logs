@@ -165,73 +165,73 @@ for idx, habit in enumerate(ROW2_HABITS):
 
 st.markdown("---")  # Add separator
 
-# Create calendar heatmaps
-st.subheader("📅 Habit Completion Calendar")
+# # Create calendar heatmaps
+# st.subheader("📅 Habit Completion Calendar")
 
 
-# Prepare data for heatmap
-last_6_months = datetime.now() - timedelta(days=180)
-df_heatmap = df[df['Data'] >= last_6_months].copy()
+# # Prepare data for heatmap
+# last_6_months = datetime.now() - timedelta(days=180)
+# df_heatmap = df[df['Data'] >= last_6_months].copy()
 
-# Create calendar heatmap for each habit
-for habit in ROW1_HABITS + [f'{h}_binary' for h in ROW2_HABITS]:
-    st.write(f"**{habit}**")
+# # Create calendar heatmap for each habit
+# for habit in ROW1_HABITS + [f'{h}_binary' for h in ROW2_HABITS]:
+#     st.write(f"**{habit}**")
     
-    # Prepare the data
-    df_plot = df_heatmap.copy()
-    df_plot['week'] = df_plot['Data'].dt.isocalendar().week
-    df_plot['weekday'] = df_plot['Data'].dt.weekday
+#     # Prepare the data
+#     df_plot = df_heatmap.copy()
+#     df_plot['week'] = df_plot['Data'].dt.isocalendar().week
+#     df_plot['weekday'] = df_plot['Data'].dt.weekday
     
-    # Create pivot table
-    pivot_table = df_plot.pivot_table(
-        values=habit,
-        index='weekday',
-        columns='week',
-        aggfunc='first'
-    )
+#     # Create pivot table
+#     pivot_table = df_plot.pivot_table(
+#         values=habit,
+#         index='weekday',
+#         columns='week',
+#         aggfunc='first'
+#     )
     
-    # Create custom colormap
-    colors = ['#ff6b6b', '#e9ecef', '#69db7c']  # red, gray, green
-    cmap = sns.blend_palette(colors, as_cmap=True)
+#     # Create custom colormap
+#     colors = ['#ff6b6b', '#e9ecef', '#69db7c']  # red, gray, green
+#     cmap = sns.blend_palette(colors, as_cmap=True)
     
-    # Create the heatmap
-    fig, ax = plt.subplots(figsize=(15, 2.5))
-    fig.patch.set_facecolor('#f0f2f6')  # Light neutral grey that works in both themes
-    ax.set_facecolor('#f0f2f6')
+#     # Create the heatmap
+#     fig, ax = plt.subplots(figsize=(15, 2.5))
+#     fig.patch.set_facecolor('#f0f2f6')  # Light neutral grey that works in both themes
+#     ax.set_facecolor('#f0f2f6')
     
-    sns.heatmap(
-        pivot_table,
-        cmap=cmap,
-        center=0.5,
-        vmin=0,
-        vmax=1,
-        cbar=False,
-        linewidths=1,
-        linecolor='white',
-        ax=ax
-    )
+#     sns.heatmap(
+#         pivot_table,
+#         cmap=cmap,
+#         center=0.5,
+#         vmin=0,
+#         vmax=1,
+#         cbar=False,
+#         linewidths=1,
+#         linecolor='white',
+#         ax=ax
+#     )
     
-    # Customize the plot
-    weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    ax.set_yticklabels(weekdays, rotation=0)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-    ax.set_xlabel('')
-    ax.set_ylabel('')
+#     # Customize the plot
+#     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+#     ax.set_yticklabels(weekdays, rotation=0)
+#     ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+#     ax.set_xlabel('')
+#     ax.set_ylabel('')
     
-    # Add text annotations
-    for i in range(pivot_table.shape[0]):
-        for j in range(pivot_table.shape[1]):
-            val = pivot_table.iloc[i, j]
-            if pd.isna(val):
-                text = 'NA'
-                color = 'gray'
-            else:
-                text = str(int(val))
-                color = 'white' if val == 0 else 'black'
-            ax.text(j + 0.5, i + 0.5, text,
-                   horizontalalignment='center',
-                   verticalalignment='center',
-                   color=color)
+#     # Add text annotations
+#     for i in range(pivot_table.shape[0]):
+#         for j in range(pivot_table.shape[1]):
+#             val = pivot_table.iloc[i, j]
+#             if pd.isna(val):
+#                 text = 'NA'
+#                 color = 'gray'
+#             else:
+#                 text = str(int(val))
+#                 color = 'white' if val == 0 else 'black'
+#             ax.text(j + 0.5, i + 0.5, text,
+#                    horizontalalignment='center',
+#                    verticalalignment='center',
+#                    color=color)
     
-    plt.tight_layout()
-    st.pyplot(fig)
+#     plt.tight_layout()
+#     st.pyplot(fig)
