@@ -16,7 +16,7 @@ def load_logbook_data():
     for path in data_paths:
         try:
             if os.path.exists(path):
-                df = pd.read_excel(path)
+                df = pd.read_excel(path, keep_default_na=True, na_values=['', ' '])
                 df['Data'] = pd.to_datetime(df['Data'], format='%d.%m.%Y')
                 return df, path
         except Exception as e:
