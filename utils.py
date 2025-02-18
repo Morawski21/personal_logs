@@ -16,10 +16,25 @@ def load_logbook_data():
     for path in data_paths:
         try:
             if os.path.exists(path):
-                df = pd.read_excel(path, keep_default_na=True, na_values=['', ' '])
+                df = pd.read_excel(path, keep_default_na=True, na_values=['', ' '])  # Removed na_filter=False
                 df['Data'] = pd.to_datetime(df['Data'], format='%d.%m.%Y')
+                
+                # Get numeric columns (excluding 'Data', 'WEEKDAY', etc.)
+                numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
+                
+                # Replace zeros with NAs only in numeric columns of the last row
+                last_row_index = df.index[-1]
+                for col in numeric_cols:
+                    if pd.isna(df.loc[last_row_index, col]) or df.loc[last_row_index, col] == 0 or df.loc[last_row_index, col] == 0.0:
+                        df.loc[last_row_index, col] = pd.NA
+                
+                # Convert columns to nullable integer type to better handle NAs
+                for col in numeric_cols:
+                    df[col] = df[col].astype('Float64')  # Using Float64 to handle NAs better
+                
                 return df, path
         except Exception as e:
+            print(f"Error loading file {path}: {str(e)}")  # Added error printing for debugging
             continue
     
     raise FileNotFoundError("Could not find or load Logbook 2025.xlsx in any known location")
