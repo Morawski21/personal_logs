@@ -56,15 +56,26 @@ for habit in ROW2_HABITS:
 
 def calculate_current_streak(series):
     """Calculate the current streak from a series of values."""
-    current_streak = 0
-    for val in series[::-1]:  # Iterate from most recent
-        if val == 1:
-            current_streak += 1
-        elif val == 0:  # Break streak on 0
-            break
-        # Skip NA values (they don't break the streak)
-        elif pd.isna(val):
-            continue
+    # Convert the series to a list for easier reverse iteration
+    values = series.fillna(0).values.tolist()
+    
+    # If the list is empty, return 0
+    if not values:
+        return 0
+        
+    # Check if the most recent value is 1 (completed)
+    if values[-1] == 1:
+        current_streak = 1  # Start with 1 for today's completion
+        
+        # Count backwards from second-to-last entry
+        for val in reversed(values[:-1]):
+            if val == 1:
+                current_streak += 1
+            else:
+                break
+    else:
+        current_streak = 0
+        
     return current_streak
 
 def calculate_longest_streak(series):
