@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from datetime import datetime
+import streamlit as st
 
 def get_data_paths():
     """Return possible data file paths."""
@@ -48,3 +49,24 @@ def calculate_streak(df, column, min_value=1):
         else:
             break
     return streak
+
+
+def check_password():
+    def password_entered():
+        if st.session_state["password"] == "bless":
+            st.session_state["password_correct"] = True
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        return False
+    elif not st.session_state["password_correct"]:
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        st.error("😕 Password incorrect")
+        return False
+    return True

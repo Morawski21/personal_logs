@@ -7,6 +7,14 @@ import config
 import pandas as pd
 from balance import calculate_balance_score
 
+
+import streamlit as st
+
+if utils.check_password():
+    # Your existing app code here
+    st.write("Welcome to the app!")
+
+
 st.set_page_config(
     page_title="Analytics",
     layout="wide",
