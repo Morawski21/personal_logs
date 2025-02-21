@@ -1,6 +1,7 @@
 # Constants
 TIME_COLUMNS = ["Tech + Praca", "YouTube", "Czytanie", "Gitara", "Inne", "Razem"]
 WEEKDAY_ORDER = ['PONIEDZIAŁEK', 'WTOREK', 'ŚRODA', 'CZWARTEK', 'PIĄTEK', 'SOBOTA', 'NIEDZIELA']
+FILENAME = "Logbook 2025.xlsx"
 
 # Define the fields and their properties
 HABITS_CONFIG = {
