@@ -5,6 +5,7 @@ import utils
 import config
 from balance import calculate_balance_score
 import pandas as pd
+import numpy as np
 
 st.set_page_config(
     page_title="Balance Analysis",
@@ -38,6 +39,7 @@ df_last_30_days = df[df['Data'] >= (today - timedelta(days=30))]
 # Calculate daily balance scores for the last 30 days
 daily_scores = []
 dates = []
+na_days = []
 for date in pd.date_range(df_last_30_days['Data'].min(), today):
     day_data = df_last_30_days[df_last_30_days['Data'].dt.date == date.date()]
     if not day_data.empty:
@@ -45,14 +47,26 @@ for date in pd.date_range(df_last_30_days['Data'].min(), today):
         score = calculate_balance_score(time_activities)
         daily_scores.append(score)
         dates.append(date)
+        na_days.append(score is None)
 
-# Weekly average scores
+# Convert to numpy arrays for easier manipulation
+dates = np.array(dates)
+daily_scores = np.array(daily_scores, dtype=float)
+na_days = np.array(na_days)
+
+# Create mask for non-NA days
+valid_days = ~na_days
+
+# Weekly average scores calculation (excluding NA days)
+current_week_scores = [s for s, na in zip(daily_scores[-7:], na_days[-7:]) if not na]
+prev_week_scores = [s for s, na in zip(daily_scores[-14:-7], na_days[-14:-7]) if not na]
+
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Weekly Balance Score")
-    current_week_avg = sum(daily_scores[-7:]) / 7 if len(daily_scores) >= 7 else 0
-    prev_week_avg = sum(daily_scores[-14:-7]) / 7 if len(daily_scores) >= 14 else 0
+    current_week_avg = sum(current_week_scores) / len(current_week_scores) if current_week_scores else 0
+    prev_week_avg = sum(prev_week_scores) / len(prev_week_scores) if prev_week_scores else 0
     score_change = current_week_avg - prev_week_avg
 
     st.metric(
@@ -89,23 +103,48 @@ with col2:
 st.subheader("Balance Score Trend")
 fig_trend = go.Figure()
 
-# Add balance score line
+# Add grey bars for NA days
+for date, is_na in zip(dates, na_days):
+    if is_na:
+        fig_trend.add_trace(go.Bar(
+            x=[date],
+            y=[100],
+            marker=dict(
+                color='rgba(200,200,200,0.3)',
+                pattern=dict(
+                    shape="/",
+                    bgcolor="rgba(220,220,220,0.3)",
+                    solidity=0.5
+                )
+            ),
+            width=24*60*60*1000,  # One day width in milliseconds
+            name='NA Day',
+            showlegend=False,
+            hovertext='No data available'
+        ))
+
+# Add balance score line (only for non-NA days)
 fig_trend.add_trace(go.Scatter(
-    x=dates,
-    y=daily_scores,
+    x=dates[valid_days],
+    y=daily_scores[valid_days],
     mode='lines+markers',
     name='Daily Balance Score',
-    line=dict(color='#47ff2f', width=2)
+    line=dict(color='#47ff2f', width=2),
+    connectgaps=False  # Don't connect over NA days
 ))
 
-# Add 7-day moving average
-moving_avg = pd.Series(daily_scores).rolling(7, min_periods=1).mean()
+# Add 7-day moving average (excluding NA days)
+valid_scores = pd.Series(daily_scores)
+valid_scores[na_days] = np.nan
+moving_avg = valid_scores.rolling(7, min_periods=1).mean()
+
 fig_trend.add_trace(go.Scatter(
     x=dates,
     y=moving_avg,
     mode='lines',
     name='7-day Average',
-    line=dict(color='#ff9f1c', width=2, dash='dash')
+    line=dict(color='#ff9f1c', width=2, dash='dash'),
+    connectgaps=True
 ))
 
 fig_trend.update_layout(
@@ -122,7 +161,7 @@ st.plotly_chart(fig_trend, use_container_width=True)
 st.subheader("Daily Balance Details")
 daily_breakdown = pd.DataFrame({
     'Date': dates[-7:],
-    'Balance Score': daily_scores[-7:],
+    'Balance Score': ['NA' if na else f"{score:.1f}" for score, na in zip(daily_scores[-7:], na_days[-7:])],
 }).set_index('Date')
 
 daily_breakdown['Balance Score'] = daily_breakdown['Balance Score'].round(1)

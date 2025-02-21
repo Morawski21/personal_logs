@@ -9,8 +9,15 @@ def calculate_balance_score(time_data):
         time_data (pd.Series): Series containing time values for different activities
     
     Returns:
-        float: Balance score between 0-100
+        float or None: Balance score between 0-100, or None if all values are NA
     """
+    # Check if all values are NA
+    if time_data.isna().all():
+        return None
+    
+    # Filter out NA values
+    time_data = time_data.fillna(0)
+    
     if time_data.sum() == 0:
         return 0
     
