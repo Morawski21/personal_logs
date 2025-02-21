@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 import src.utils as utils
 
-from config import HABITS_CONFIG
+from src.config import HABITS_CONFIG
 
 st.set_page_config(
     page_title="Habit Streaks", 
