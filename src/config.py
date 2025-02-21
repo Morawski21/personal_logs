@@ -22,9 +22,37 @@ HABITS_CONFIG = {
     "suplementy": {"color": "#00cc00", "active": True, "emoji": "💊", "type": "binary"}
 }
 
-# Function to get active fields
-def get_active_fields():
-    return {field: props for field, props in HABITS_CONFIG.items() if props["active"]}
+def get_fields(types=None, active_only=True, include_system=False):
+    """
+    Get fields filtered by multiple criteria.
+    
+    Args:
+        types (str|list, optional): One or more field types ('time', 'binary', 'description')
+        active_only (bool): Whether to return only active fields
+        include_system (bool): Whether to include system columns (Data, WEEKDAY, Razem)
+    
+    Returns:
+        dict: Filtered fields and their properties
+    """
+    # Convert single type to list for consistent handling
+    if isinstance(types, str):
+        types = [types]
+    
+    fields = HABITS_CONFIG.items()
+    
+    # Apply filters
+    if active_only:
+        fields = ((k, v) for k, v in fields if v["active"])
+    if types:
+        fields = ((k, v) for k, v in fields if v["type"] in types)
+        
+    result = dict(fields)
+    
+    # Add system columns if requested
+    if include_system:
+        return list(result.keys()) + ['Data', 'WEEKDAY', 'Razem']
+    
+    return result
 
 def get_column_colors():
     """Return color mapping for specific columns"""

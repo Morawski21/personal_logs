@@ -11,10 +11,7 @@ import src.analytics as analytics
 from src.data_handler import get_logbook_data
 
 
-today = dt.datetime.now()
-
 utils.set_custom_page_config("Logbook Analytics")
-
 
 # Load data using shared functionality
 try:
@@ -26,23 +23,23 @@ except Exception as e:
 
 # Filter data for the last 7 days and the previous 7 days
 df_last_7_days = analytics.filter_date_range(df, delta_days=7)
-df_previous_7_days = analytics.filter_date_range(df, today, delta_days=7, offset_days=7)
+df_previous_7_days = analytics.filter_date_range(df, delta_days=7, offset_days=7)
 
 # Main metrics
 with st.expander("📊 Weekly Stats Comparison", expanded=True):
     st.caption("Comparing last 7 days with previous week")
     col1, col2, col3 = st.columns(3)
 
-    active_fields = config.get_active_fields()
-    time_columns = [field for field in active_fields if field not in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h", "sport", "accessories", "suplementy"]]
+    time_columns = list(config.get_fields('time').keys())
     # Ensure "Inne" is at the beginning of the list
     if "Inne" in time_columns:
         time_columns.remove("Inne")
         time_columns.insert(0, "Inne")
 
     # Filter dataframe to include only active fields
-    df_last_7_days = df_last_7_days[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
-    df_previous_7_days = df_previous_7_days[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
+    tracked_columns = config.get_fields(active_only=True, include_system=True)
+    df_last_7_days = df_last_7_days[tracked_columns]
+    df_previous_7_days = df_previous_7_days[tracked_columns]
 
     try:
         if df_last_7_days.empty:
@@ -100,7 +97,7 @@ with st.expander("📈 Daily Activity Analysis", expanded=True):
     for date in df_last_30_days[na_mask]['Data']:
         fig_daily_trend.add_trace(go.Bar(
             x=[date],
-            y=[df_last_30_days['Razem'].max()],  # Use max value to ensure bars cover full height
+            y=[df_last_30_days['Razem'].max()],
             marker=dict(
                 color='rgba(200,200,200,0.3)',
                 pattern=dict(
@@ -117,11 +114,12 @@ with st.expander("📈 Daily Activity Analysis", expanded=True):
 
     # Then plot regular bars in normal order
     for column in time_columns:
+        values = df_last_30_days[column].fillna(0)  # Fill NA with 0 for proper stacking
         fig_daily_trend.add_trace(go.Bar(
             x=df_last_30_days['Data'],
-            y=df_last_30_days[column],
+            y=values,
             name=column,
-            marker_color=column_colors.get(column, None)  # Use None if color not specified
+            marker_color=column_colors.get(column, None),
         ))
 
     # Finally add the trend line on top
@@ -134,13 +132,14 @@ with st.expander("📈 Daily Activity Analysis", expanded=True):
         hovertemplate='7-day avg: %{y:.1f} min<extra></extra>'
     ))
 
-    # Update layout with a better color scheme
+    # Update layout to ensure proper stacking
     fig_daily_trend.update_layout(
         barmode='stack',
         xaxis_title="Date",
         yaxis_title="Minutes",
         legend_title="Activity",
         xaxis=dict(tickformat="%Y-%m-%d"),
+        barnorm=None,  # Ensure no normalization is applied
     )
 
     st.plotly_chart(fig_daily_trend, use_container_width=True)
