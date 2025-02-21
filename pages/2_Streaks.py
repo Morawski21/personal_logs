@@ -1,10 +1,13 @@
+from datetime import datetime, timedelta
+
 import streamlit as st
+import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import pandas as pd
-from datetime import datetime, timedelta
-import utils
-import numpy as np
+
+import src.utils as utils
+
 from config import HABITS_CONFIG
 
 st.set_page_config(
