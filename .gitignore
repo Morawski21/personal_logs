@@ -1,5 +1,13 @@
+# Virtual environment
 /venv
-/data
 
+# Local assets & environment files
+/data
+.env
+
+# Docker files
 *.tar
+
+# Cache files
 /__pycache__
+*.pyc
