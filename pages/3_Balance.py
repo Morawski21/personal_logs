@@ -26,7 +26,7 @@ except Exception as e:
 
 # Get active time-based fields
 active_fields = config.get_active_fields()
-time_columns = [field for field in active_fields if field not in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h", "sport", "accessories", "suplementy"]]
+time_columns = [field for field in active_fields if active_fields[field]["type"] == "time"]
 if "Inne" in time_columns:
     time_columns.remove("Inne")
     time_columns.insert(0, "Inne")

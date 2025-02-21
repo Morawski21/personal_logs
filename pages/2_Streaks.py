@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import utils
 import numpy as np
+from config import HABITS_CONFIG
 
 st.set_page_config(
     page_title="Habit Streaks", 
@@ -37,16 +38,6 @@ except Exception as e:
 ROW1_HABITS = ['Anki', 'Pamiętnik', 'YNAB']
 ROW2_HABITS = ['YouTube', 'Gitara', 'Czytanie']
 HABITS = ROW1_HABITS + ROW2_HABITS
-
-# Define habit emojis
-HABIT_EMOJIS = {
-    'Anki': '🧠',  # Brain for learning
-    'Pamiętnik': '📔',  # Notebook for journaling
-    'YNAB': '💰',  # Money for finance
-    'YouTube': '🎥',  # Camera for video content
-    'Gitara': '🎸',  # Guitar
-    'Czytanie': '📚',  # Books for reading
-}
 
 # Convert duration habits to binary based on 20-minute threshold
 for habit in ROW2_HABITS:
@@ -118,7 +109,7 @@ for idx, habit in enumerate(ROW1_HABITS):
     longest_streak = calculate_longest_streak(df[habit])
     
     with cols1[idx]:
-        with st.expander(f"{HABIT_EMOJIS[habit]} {habit}", expanded=True):
+        with st.expander(f"{HABITS_CONFIG[habit]['emoji']} {habit}", expanded=True):
             col1, col2 = st.columns(2)
             with col1:
                 st.metric(
@@ -144,7 +135,7 @@ for idx, habit in enumerate(ROW2_HABITS):
     longest_streak = calculate_longest_streak(df[binary_habit])
     
     with cols2[idx]:
-        with st.expander(f"{HABIT_EMOJIS[habit]} {habit}", expanded=True):
+        with st.expander(f"{HABITS_CONFIG[habit]['emoji']} {habit}", expanded=True):
             col1, col2 = st.columns(2)
             with col1:
                 st.metric(
@@ -162,76 +153,3 @@ for idx, habit in enumerate(ROW2_HABITS):
                     delta="Best 🏆",
                     delta_color="off"
                 )
-
-st.markdown("---")  # Add separator
-
-# # Create calendar heatmaps
-# st.subheader("📅 Habit Completion Calendar")
-
-
-# # Prepare data for heatmap
-# last_6_months = datetime.now() - timedelta(days=180)
-# df_heatmap = df[df['Data'] >= last_6_months].copy()
-
-# # Create calendar heatmap for each habit
-# for habit in ROW1_HABITS + [f'{h}_binary' for h in ROW2_HABITS]:
-#     st.write(f"**{habit}**")
-    
-#     # Prepare the data
-#     df_plot = df_heatmap.copy()
-#     df_plot['week'] = df_plot['Data'].dt.isocalendar().week
-#     df_plot['weekday'] = df_plot['Data'].dt.weekday
-    
-#     # Create pivot table
-#     pivot_table = df_plot.pivot_table(
-#         values=habit,
-#         index='weekday',
-#         columns='week',
-#         aggfunc='first'
-#     )
-    
-#     # Create custom colormap
-#     colors = ['#ff6b6b', '#e9ecef', '#69db7c']  # red, gray, green
-#     cmap = sns.blend_palette(colors, as_cmap=True)
-    
-#     # Create the heatmap
-#     fig, ax = plt.subplots(figsize=(15, 2.5))
-#     fig.patch.set_facecolor('#f0f2f6')  # Light neutral grey that works in both themes
-#     ax.set_facecolor('#f0f2f6')
-    
-#     sns.heatmap(
-#         pivot_table,
-#         cmap=cmap,
-#         center=0.5,
-#         vmin=0,
-#         vmax=1,
-#         cbar=False,
-#         linewidths=1,
-#         linecolor='white',
-#         ax=ax
-#     )
-    
-#     # Customize the plot
-#     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-#     ax.set_yticklabels(weekdays, rotation=0)
-#     ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-#     ax.set_xlabel('')
-#     ax.set_ylabel('')
-    
-#     # Add text annotations
-#     for i in range(pivot_table.shape[0]):
-#         for j in range(pivot_table.shape[1]):
-#             val = pivot_table.iloc[i, j]
-#             if pd.isna(val):
-#                 text = 'NA'
-#                 color = 'gray'
-#             else:
-#                 text = str(int(val))
-#                 color = 'white' if val == 0 else 'black'
-#             ax.text(j + 0.5, i + 0.5, text,
-#                    horizontalalignment='center',
-#                    verticalalignment='center',
-#                    color=color)
-    
-#     plt.tight_layout()
-#     st.pyplot(fig)
