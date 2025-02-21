@@ -12,11 +12,7 @@ import src.utils as utils
 import src.config as config
 
 
-st.set_page_config(
-    page_title="Habit Streaks", 
-    layout="wide",
-    page_icon="icon.png"
-)
+utils.set_custom_page_config("Habit Streaks")
 
 # Add CSS to hide delta arrows
 st.write(

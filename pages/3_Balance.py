@@ -6,15 +6,11 @@ import pandas as pd
 import numpy as np
 
 import src.utils as utils
-import config as config
+import src.config as config
 import src.balance as balance
 
 
-st.set_page_config(
-    page_title="Balance Analysis",
-    layout="wide",
-    page_icon="⚖️"
-)
+utils.set_custom_page_config("Balance Analysis")
 
 st.title("⚖️ Time Balance Analysis")
 
@@ -47,7 +43,7 @@ for date in pd.date_range(df_last_30_days['Data'].min(), today):
     day_data = df_last_30_days[df_last_30_days['Data'].dt.date == date.date()]
     if not day_data.empty:
         time_activities = day_data[time_columns].iloc[0]
-        score = calculate_balance_score(time_activities)
+        score = balance.calculate_balance_score(time_activities)
         daily_scores.append(score)
         dates.append(date)
         na_days.append(score is None)
