@@ -47,37 +47,33 @@ for habit in ROW2_HABITS:
 
 def calculate_current_streak(series):
     """Calculate the current streak from a series of values."""
-    # Convert series to float, replacing NaN with 0 only for completed days
     values = series.copy()
     
     # For duration habits, convert to binary based on 20min threshold but preserve NaN
     if values.max() > 1:  # If we find values > 1, this is a duration-based habit
-        values = values.apply(lambda x: 1.0 if pd.notnull(x) and x >= 20 else (0.0 if pd.notnull(x) else np.nan))
+        values = values.apply(lambda x: 1.0 if pd.notnull(x) and x >= 20 else 0.0)
     
     # Convert to list for easier processing
     values = values.values
     
-    # Start from the most recent day and count backwards
+    # Get today's index
+    today_idx = len(values) - 1
+    
+    # Initialize streak counter
     current_streak = 0
     
-    # Skip NaN values at the end (today if not filled in yet)
-    idx = len(values) - 1
-    while idx >= 0 and pd.isna(values[idx]):
-        idx -= 1
+    # Skip today if it's 0 (potentially unfilled)
+    if values[today_idx] == 0:
+        today_idx -= 1
         
     # Count streak from last valid entry
-    while idx >= 0:
-        if pd.isna(values[idx]):  # Skip NaN values (incomplete days)
-            idx -= 1
-            continue
-        elif values[idx] >= 1:  # Success
+    for idx in range(today_idx, -1, -1):
+        if values[idx] >= 1:  # Success
             current_streak += 1
         else:  # Break on explicit 0
             break
-        idx -= 1
             
     return current_streak
-
 def calculate_longest_streak(series):
     """Calculate the longest streak from a series of values."""
     # Same conversion as in current_streak
