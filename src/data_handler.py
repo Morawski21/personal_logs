@@ -10,6 +10,7 @@ def get_data_paths(filename: str = config.FILENAME):
     """Return possible data file paths."""
     return [
         os.path.join('data', filename),  # Local development path
+        
         os.path.join('/app/data', filename),  # Docker container path
     ]
 

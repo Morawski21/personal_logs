@@ -1,3 +1,39 @@
+import datetime as dt
+import pandas as pd
+
+def filter_date_range(df, end_date=None, delta_days=7, offset_days=0):
+    """
+    Filter DataFrame for a specific date range with optional offset.
+    
+    Args:
+        df (pd.DataFrame): DataFrame containing 'Data' column
+        end_date (datetime, optional): End date for filtering. Defaults to today.
+        delta_days (int, optional): Number of days to look back. Defaults to 7.
+        offset_days (int, optional): Number of days to offset the period. Defaults to 0.
+        
+    Returns:
+        pd.DataFrame: filtered_date_range
+    """
+    if end_date is None:
+        # Convert to pandas Timestamp to match DataFrame's datetime64
+        end_date = pd.Timestamp.now().normalize()
+    else:
+        # Ensure end_date is a pandas Timestamp
+        end_date = pd.Timestamp(end_date)
+    
+    # Apply offset to end date
+    end_date = end_date - pd.Timedelta(days=offset_days)
+    
+    # Filtered period
+    filtered_date_range = df[
+        (df['Data'] > (end_date - pd.Timedelta(days=delta_days))) &
+        (df['Data'] <= end_date)
+    ]
+    
+    return filtered_date_range
+
+
+
 import numpy as np
 import pandas as pd
 

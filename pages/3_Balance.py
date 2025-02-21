@@ -7,7 +7,7 @@ import numpy as np
 
 import src.utils as utils
 import src.config as config
-import src.balance as balance
+import src.analytics as analytics
 from src.data_handler import get_logbook_data
 
 
@@ -43,7 +43,7 @@ for date in pd.date_range(df_last_30_days['Data'].min(), today):
     day_data = df_last_30_days[df_last_30_days['Data'].dt.date == date.date()]
     if not day_data.empty:
         time_activities = day_data[time_columns].iloc[0]
-        score = balance.calculate_balance_score(time_activities)
+        score = analytics.calculate_balance_score(time_activities)
         daily_scores.append(score)
         dates.append(date)
         na_days.append(score is None)

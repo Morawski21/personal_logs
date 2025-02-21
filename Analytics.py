@@ -7,7 +7,9 @@ import pandas as pd
 
 import src.utils as utils
 import src.config as config
+import src.analytics as analytics
 from src.data_handler import get_logbook_data
+
 
 today = dt.datetime.now()
 
@@ -23,8 +25,8 @@ except Exception as e:
     st.stop()
 
 # Filter data for the last 7 days and the previous 7 days
-df_last_7_days = df[df['Data'] >= (today - dt.timedelta(days=7))]
-df_previous_7_days = df[(df['Data'] >= (today - dt.timedelta(days=14))) & (df['Data'] < (today - dt.timedelta(days=7)))]
+df_last_7_days = analytics.filter_date_range(df, delta_days=7)
+df_previous_7_days = analytics.filter_date_range(df, today, delta_days=7, offset_days=7)
 
 # Main metrics
 with st.expander("📊 Weekly Stats Comparison", expanded=True):
@@ -80,15 +82,7 @@ with st.expander("📊 Weekly Stats Comparison", expanded=True):
             st.warning("No data available for this period")
             
 # Filter data for the last 30 days
-df_last_30_days = df[df['Data'] >= (today - dt.timedelta(days=30))]
-
-# Ensure all dates within the last 30 days are present, excluding future dates
-date_range = pd.date_range(
-    start=df_last_30_days['Data'].min(),
-    end=min(df_last_30_days['Data'].max(), today),
-    freq='D'
-)
-df_last_30_days = df_last_30_days.set_index('Data').reindex(date_range).fillna(0).reset_index().rename(columns={'index': 'Data'})
+df_last_30_days = analytics.filter_date_range(df, delta_days=30)
 
 # Daily breakdown with trend line for the last 30 days
 with st.expander("📈 Daily Activity Analysis", expanded=True):
@@ -101,7 +95,27 @@ with st.expander("📈 Daily Activity Analysis", expanded=True):
     # Create the figure with custom colors
     fig_daily_trend = go.Figure()
 
-    # Plot bars in normal order - first traces appear at the bottom
+    # First add grey bars for NA days
+    na_mask = df_last_30_days['Razem'].isna()
+    for date in df_last_30_days[na_mask]['Data']:
+        fig_daily_trend.add_trace(go.Bar(
+            x=[date],
+            y=[df_last_30_days['Razem'].max()],  # Use max value to ensure bars cover full height
+            marker=dict(
+                color='rgba(200,200,200,0.3)',
+                pattern=dict(
+                    shape="/",
+                    bgcolor="rgba(220,220,220,0.3)",
+                    solidity=0.5
+                )
+            ),
+            width=24*60*60*1000,  # One day width in milliseconds
+            name='NA Day',
+            showlegend=False,
+            hovertext='No data available'
+        ))
+
+    # Then plot regular bars in normal order
     for column in time_columns:
         fig_daily_trend.add_trace(go.Bar(
             x=df_last_30_days['Data'],
@@ -110,12 +124,14 @@ with st.expander("📈 Daily Activity Analysis", expanded=True):
             marker_color=column_colors.get(column, None)  # Use None if color not specified
         ))
 
+    # Finally add the trend line on top
     fig_daily_trend.add_trace(go.Scatter(
         x=df_last_30_days['Data'],
         y=df_last_30_days['7_day_avg'],
         mode='lines',
         name='7-day Average',
-        line=dict(width=2, dash='dot', color='#47ff2f')
+        line=dict(width=2, dash='dot', color='#47ff2f'),
+        hovertemplate='7-day avg: %{y:.1f} min<extra></extra>'
     ))
 
     # Update layout with a better color scheme
