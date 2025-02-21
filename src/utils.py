@@ -24,7 +24,7 @@ def load_logbook_data():
     for path in data_paths:
         try:
             if os.path.exists(path):
-                df = pd.read_excel(path, keep_default_na=True, na_values=['', ' '])  # Removed na_filter=False
+                df = pd.read_excel(path, keep_default_na=True, na_values=['', ' '])
                 df['Data'] = pd.to_datetime(df['Data'], format='%d.%m.%Y')
                 
                 # Get numeric columns (excluding 'Data', 'WEEKDAY', etc.)
@@ -56,24 +56,3 @@ def calculate_streak(df, column, min_value=1):
         else:
             break
     return streak
-
-
-def check_password():
-    def password_entered():
-        if st.session_state["password"] == "bless":
-            st.session_state["password_correct"] = True
-        else:
-            st.session_state["password_correct"] = False
-
-    if "password_correct" not in st.session_state:
-        st.text_input(
-            "Password", type="password", on_change=password_entered, key="password"
-        )
-        return False
-    elif not st.session_state["password_correct"]:
-        st.text_input(
-            "Password", type="password", on_change=password_entered, key="password"
-        )
-        st.error("😕 Password incorrect")
-        return False
-    return True
