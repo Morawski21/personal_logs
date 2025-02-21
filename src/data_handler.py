@@ -47,8 +47,8 @@ def preprocess_logbook_data(df: pd.DataFrame) -> pd.DataFrame:
     last_row_index = df.index[-1]
     
     for col in numeric_cols:
-        if df.loc[last_row_index, col] == 0 or df.loc[last_row_index, col] == 0.0:
-            df.loc[last_row_index, col] = pd.NA
+        if pd.isna(df.loc[last_row_index, col]) or df.loc[last_row_index, col] == 0:
+            df.loc[last_row_index, col] = 0.0
     
     return df
 
