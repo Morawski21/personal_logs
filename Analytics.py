@@ -54,36 +54,43 @@ with st.expander("📊 Weekly Stats Comparison", expanded=True):
     df_last_7_days = df_last_7_days[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
     df_previous_7_days = df_previous_7_days[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
 
-    # Calculate metrics for the current period
-    avg_total = df_last_7_days['Razem'].mean()
-    most_productive_day = df_last_7_days.loc[df_last_7_days['Razem'].idxmax()]
-    total_productive_hours = df_last_7_days['Razem'].sum() / 60
+    try:
+        if df_last_7_days.empty:
+            raise ValueError("No data available for the current week")
 
-    # Calculate metrics for the previous period
-    avg_total_prev = df_previous_7_days['Razem'].mean() if not df_previous_7_days.empty else 0
-    most_productive_day_prev = df_previous_7_days['Razem'].max() if not df_previous_7_days.empty else 0
-    total_productive_hours_prev = df_previous_7_days['Razem'].sum() / 60 if not df_previous_7_days.empty else 0
+        # Calculate metrics for the current period
+        avg_total = df_last_7_days['Razem'].mean()
+        most_productive_day = df_last_7_days.loc[df_last_7_days['Razem'].idxmax()]
+        total_productive_hours = df_last_7_days['Razem'].sum() / 60
 
-    # Calculate percentage changes
-    avg_total_change = ((avg_total - avg_total_prev) / avg_total_prev * 100) if avg_total_prev != 0 else 0
-    most_productive_day_change = ((most_productive_day['Razem'] - most_productive_day_prev) / most_productive_day_prev * 100) if most_productive_day_prev != 0 else 0
-    total_productive_hours_change = ((total_productive_hours - total_productive_hours_prev) / total_productive_hours_prev * 100) if total_productive_hours_prev != 0 else 0
+        # Calculate metrics for the previous period
+        avg_total_prev = df_previous_7_days['Razem'].mean() if not df_previous_7_days.empty else 0
+        most_productive_day_prev = df_previous_7_days['Razem'].max() if not df_previous_7_days.empty else 0
+        total_productive_hours_prev = df_previous_7_days['Razem'].sum() / 60 if not df_previous_7_days.empty else 0
 
-    with col1:
-        st.metric("Average Daily Total (min)", 
-                 f"{avg_total:.0f}", 
-                 f"{avg_total_change:.1f}%")
+        # Calculate percentage changes
+        avg_total_change = ((avg_total - avg_total_prev) / avg_total_prev * 100) if avg_total_prev != 0 else 0
+        most_productive_day_change = ((most_productive_day['Razem'] - most_productive_day_prev) / most_productive_day_prev * 100) if most_productive_day_prev != 0 else 0
+        total_productive_hours_change = ((total_productive_hours - total_productive_hours_prev) / total_productive_hours_prev * 100) if total_productive_hours_prev != 0 else 0
 
-    with col2:
-        st.metric("Most Productive Day (min)", 
-                 f"{most_productive_day['Razem']:.0f}", 
-                 f"{most_productive_day_change:.1f}%")
+        with col1:
+            st.metric("Average Daily Total (min)", 
+                     f"{avg_total:.0f}", 
+                     f"{avg_total_change:.1f}%")
 
-    with col3:
-        st.metric("Total Productive Hours", 
-                 f"{total_productive_hours:.1f}", 
-                 f"{total_productive_hours_change:.1f}%")
+        with col2:
+            st.metric("Most Productive Day (min)", 
+                     f"{most_productive_day['Razem']:.0f}", 
+                     f"{most_productive_day_change:.1f}%")
 
+        with col3:
+            st.metric("Total Productive Hours", 
+                     f"{total_productive_hours:.1f}", 
+                     f"{total_productive_hours_change:.1f}%")
+
+    except Exception as e:
+            st.warning("No data available for this period")
+            
 # Filter data for the last 30 days
 df_last_30_days = df[df['Data'] >= (today - timedelta(days=30))]
 
