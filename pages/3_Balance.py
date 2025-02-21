@@ -84,20 +84,26 @@ with col1:
 
 with col2:
     st.subheader("Current Week Distribution")
-    total_time = df_last_7_days[time_columns].sum()
+    # Filter out rows where all time columns are NA
+    valid_days_df = df_last_7_days[~df_last_7_days[time_columns].isna().all(axis=1)]
+    total_time = valid_days_df[time_columns].sum()
     
-    fig_pie = go.Figure(data=[go.Pie(
-        labels=time_columns,
-        values=total_time,
-        marker_colors=[config.get_column_colors().get(col, '#808080') for col in time_columns]
-    )])
-    
-    fig_pie.update_layout(
-        showlegend=True,
-        height=300
-    )
-    
-    st.plotly_chart(fig_pie, use_container_width=True)
+    # Only create pie chart if there's data
+    if total_time.sum() > 0:
+        fig_pie = go.Figure(data=[go.Pie(
+            labels=time_columns,
+            values=total_time,
+            marker_colors=[config.get_column_colors().get(col, '#808080') for col in time_columns]
+        )])
+        
+        fig_pie.update_layout(
+            showlegend=True,
+            height=300
+        )
+        
+        st.plotly_chart(fig_pie, use_container_width=True)
+    else:
+        st.info("No data available for the current week")
 
 # Balance Score Trend
 st.subheader("Balance Score Trend")
