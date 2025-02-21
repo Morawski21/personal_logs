@@ -11,6 +11,7 @@ import numpy as np
 import src.utils as utils
 import src.config as config
 
+from src.data_handler import get_logbook_data
 
 utils.set_custom_page_config("Habit Streaks")
 
@@ -28,9 +29,7 @@ st.write(
 
 # Load data using shared functionality
 try:
-    df, loaded_path = utils.load_logbook_data()
-    # Filter out future dates
-    df = df[df['Data'] <= datetime.now()]
+    df, loaded_path = get_logbook_data()
 except Exception as e:
     st.error(f"Error loading data: {str(e)}")
     st.stop()

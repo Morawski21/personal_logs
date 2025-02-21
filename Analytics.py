@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+import datetime as dt
 
 import streamlit as st
 import plotly.express as px
@@ -7,26 +7,24 @@ import pandas as pd
 
 import src.utils as utils
 import src.config as config
+from src.data_handler import get_logbook_data
 
+today = dt.datetime.now()
 
 utils.set_custom_page_config("Logbook Analytics")
 
-# Define today at the start
-today = datetime.now()
 
 # Load data using shared functionality
 try:
-    df, loaded_path = utils.load_logbook_data()
-    # Filter out future dates
-    df = df[df['Data'] <= today]
-    #st.success(f"Data loaded successfully from: {loaded_path}")
+    df, loaded_path = get_logbook_data()
+
 except Exception as e:
     st.error(f"Error loading data: {str(e)}")
     st.stop()
 
 # Filter data for the last 7 days and the previous 7 days
-df_last_7_days = df[df['Data'] >= (today - timedelta(days=7))]
-df_previous_7_days = df[(df['Data'] >= (today - timedelta(days=14))) & (df['Data'] < (today - timedelta(days=7)))]
+df_last_7_days = df[df['Data'] >= (today - dt.timedelta(days=7))]
+df_previous_7_days = df[(df['Data'] >= (today - dt.timedelta(days=14))) & (df['Data'] < (today - dt.timedelta(days=7)))]
 
 # Main metrics
 with st.expander("📊 Weekly Stats Comparison", expanded=True):
@@ -82,7 +80,7 @@ with st.expander("📊 Weekly Stats Comparison", expanded=True):
             st.warning("No data available for this period")
             
 # Filter data for the last 30 days
-df_last_30_days = df[df['Data'] >= (today - timedelta(days=30))]
+df_last_30_days = df[df['Data'] >= (today - dt.timedelta(days=30))]
 
 # Ensure all dates within the last 30 days are present, excluding future dates
 date_range = pd.date_range(

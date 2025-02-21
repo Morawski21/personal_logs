@@ -8,6 +8,7 @@ import numpy as np
 import src.utils as utils
 import src.config as config
 import src.balance as balance
+from src.data_handler import get_logbook_data
 
 
 utils.set_custom_page_config("Balance Analysis")
@@ -17,8 +18,7 @@ st.title("⚖️ Time Balance Analysis")
 # Load and prepare data
 today = datetime.now()
 try:
-    df, _ = utils.load_logbook_data()
-    df = df[df['Data'] <= today]
+    df, _ = get_logbook_data()
 except Exception as e:
     st.error(f"Error loading data: {str(e)}")
     st.stop()
