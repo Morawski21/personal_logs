@@ -1,25 +1,15 @@
+from datetime import datetime, timedelta
+
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
-import utils
-import config
 import pandas as pd
-from balance import calculate_balance_score
+
+import src.utils as utils
+import src.config as config
 
 
-import streamlit as st
-
-# if utils.check_password():
-#     # Your existing app code here
-#     st.write("Welcome to the app!")
-
-
-st.set_page_config(
-    page_title="Analytics",
-    layout="wide",
-    page_icon="icon.png"
-)
+utils.set_custom_page_config("Logbook Analytics")
 
 # Define today at the start
 today = datetime.now()

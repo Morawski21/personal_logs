@@ -1,11 +1,16 @@
+from datetime import datetime, timedelta
+
 import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
-from datetime import datetime, timedelta
-import utils
 import numpy as np
-from config import HABITS_CONFIG
+
+import src.utils as utils
+import src.config as config
+
 
 st.set_page_config(
     page_title="Habit Streaks", 
@@ -109,7 +114,7 @@ for idx, habit in enumerate(ROW1_HABITS):
     longest_streak = calculate_longest_streak(df[habit])
     
     with cols1[idx]:
-        with st.expander(f"{HABITS_CONFIG[habit]['emoji']} {habit}", expanded=True):
+        with st.expander(f"{config.HABITS_CONFIG[habit]['emoji']} {habit}", expanded=True):
             col1, col2 = st.columns(2)
             with col1:
                 st.metric(
@@ -135,7 +140,7 @@ for idx, habit in enumerate(ROW2_HABITS):
     longest_streak = calculate_longest_streak(df[binary_habit])
     
     with cols2[idx]:
-        with st.expander(f"{HABITS_CONFIG[habit]['emoji']} {habit}", expanded=True):
+        with st.expander(f"{config.HABITS_CONFIG[habit]['emoji']} {habit}", expanded=True):
             col1, col2 = st.columns(2)
             with col1:
                 st.metric(
