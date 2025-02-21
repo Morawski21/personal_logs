@@ -3,6 +3,13 @@ import pandas as pd
 from datetime import datetime
 import streamlit as st
 
+def set_custom_page_config(title: str):
+    st.set_page_config(
+        page_title=title,
+        layout="wide",
+        page_icon="assets/icon.png"
+    )
+
 def get_data_paths():
     """Return possible data file paths."""
     return [
