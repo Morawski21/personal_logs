@@ -1,10 +1,13 @@
+from datetime import datetime, timedelta
+
 import streamlit as st
+import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import pandas as pd
-from datetime import datetime, timedelta
-import utils
-import numpy as np
+
+import src.utils as utils
+
 
 st.set_page_config(
     page_title="Habit Streaks", 

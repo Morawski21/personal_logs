@@ -1,11 +1,14 @@
-import streamlit as st
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
-import utils
-import config
-from balance import calculate_balance_score
+
+import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
+
+import src.utils as utils
+import src.config as config
+from src.balance import calculate_balance_score
+
 
 st.set_page_config(
     page_title="Balance Analysis",
