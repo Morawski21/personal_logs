@@ -7,10 +7,11 @@ import streamlit as st
 def get_claude_client():
     """Initialize Claude client with API key."""
     try:
-        api_key = os.environ.get('ANTHROPIC_KEY')
+        # Access secret via Streamlit instead of environment variable
+        api_key = st.secrets["ANTHROPIC_KEY"]
         
         if not api_key:
-            raise ValueError("ANTHROPIC_KEY not found in environment variables")
+            raise ValueError("ANTHROPIC_KEY not found in secrets")
             
         return Anthropic(api_key=api_key)
         
