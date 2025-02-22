@@ -2,13 +2,12 @@ import os
 from datetime import datetime
 import pandas as pd
 from anthropic import Anthropic
-from dotenv import load_dotenv
+import streamlit as st
 
 def get_claude_client():
     """Initialize Claude client with API key."""
     try:
-        load_dotenv()
-        api_key = os.getenv('ANTHROPIC_KEY')
+        api_key = os.environ.get('ANTHROPIC_KEY')
         
         if not api_key:
             raise ValueError("ANTHROPIC_KEY not found in environment variables")
