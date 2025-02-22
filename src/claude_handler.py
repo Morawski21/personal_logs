@@ -1,22 +1,23 @@
 import os
 from datetime import datetime
-import pandas as pd
-from anthropic import Anthropic
+
 import streamlit as st
+from anthropic import Anthropic
+import pandas as pd
+
 
 def get_claude_client():
     """Initialize Claude client with API key."""
     try:
-        # Access secret via Streamlit instead of environment variable
-        api_key = st.secrets["ANTHROPIC_KEY"]
+        api_key = os.environ["ANTHROPIC_KEY"]
         
         if not api_key:
-            raise ValueError("ANTHROPIC_KEY not found in secrets")
+            raise ValueError("ANTHROPIC_KEY not found in environment")
             
         return Anthropic(api_key=api_key)
         
     except Exception as e:
-        st.error(f"Failed to initialize Claude client: {str(e)}")
+        print(f"Failed to initialize Claude client: {str(e)}")
         return None
 
 def generate_context(df: pd.DataFrame):

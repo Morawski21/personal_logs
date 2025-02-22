@@ -35,4 +35,5 @@ jobs:
           --restart unless-stopped \
           -v /volume1/docker/personal-logs/data:/app/data \
           -p 8501:8501 \
+          -e ANTHROPIC_KEY=${{ secrets.ANTHROPIC_KEY }} \
           personal-logs:latest
