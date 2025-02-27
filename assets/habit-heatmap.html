@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            padding: 16px;
+        }
+        
+        .view-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+            gap: 12px;
+        }
+        
+        .view-btn {
+            background-color: #1f2937;
+            color: #e5e7eb;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .view-btn:hover {
+            background-color: #374151;
+        }
+        
+        .view-btn.active {
+            background-color: #4b5563;
+            color: white;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .habit-card {
+            background-color: #111827;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .emoji {
+            font-size: 28px;
+            margin-right: 16px;
+            line-height: 1;
+        }
+        
+        .habit-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .heatmap {
+            display: grid;
+            gap: 4px;
+            margin-top: 16px;
+        }
+        
+        .heatmap.weekly {
+            grid-template-columns: repeat(7, 1fr);
+        }
+        
+        .heatmap.monthly {
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+        }
+        
+        .heatmap.yearly {
+            grid-template-columns: repeat(26, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 2px;
+        }
+        
+        .day {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            transition: transform 0.2s, opacity 0.3s;
+        }
+        
+        .day:hover {
+            transform: scale(1.15);
+            opacity: 0.9;
+        }
+        
+        .completed {
+            opacity: 1;
+        }
+        
+        .missed {
+            background-color: #374151;
+            opacity: 0.4;
+        }
+        
+        .empty {
+            background-color: transparent;
+        }
+        
+        .day-label {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            color: #9ca3af;
+            height: 100%;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .habit-card {
+            animation: fadeIn 0.3s ease forwards;
+        }
+        
+        .habit-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        
+        .habit-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        
+        .habit-card:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+        
+        .habit-card:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+        
+        .habit-card:nth-child(6) {
+            animation-delay: 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/javascript">
+        // Get habits data from Streamlit
+        const habitsData = HABITS_DATA_PLACEHOLDER;
+        
+        // Function to initialize the app
+        function initApp() {
+            const container = document.createElement('div');
+            container.className = 'container';
+            
+            // Create view selector
+            const viewSelector = document.createElement('div');
+            viewSelector.className = 'view-selector';
+            
+            const viewOptions = [
+                { id: 'weekly', label: 'Last 7 Days' },
+                { id: 'monthly', label: 'Current Month' },
+                { id: 'yearly', label: 'Full Year' }
+            ];
+            
+            // Set initial active view
+            let activeView = 'weekly';
+            
+            // Create view buttons
+            viewOptions.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = `view-btn ${option.id === activeView ? 'active' : ''}`;
+                btn.textContent = option.label;
+                btn.dataset.view = option.id;
+                
+                btn.addEventListener('click', () => {
+                    // Update active state
+                    document.querySelectorAll('.view-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    btn.classList.add('active');
+                    
+                    // Update active view
+                    activeView = option.id;
+                    
+                    // Redraw heatmaps
+                    renderHeatmaps(activeView);
+                });
+                
+                viewSelector.appendChild(btn);
+            });
+            
+            container.appendChild(viewSelector);
+            
+            // Create habit grid
+            const habitGrid = document.createElement('div');
+            habitGrid.className = 'grid-container';
+            habitGrid.id = 'habit-grid';
+            container.appendChild(habitGrid);
+            
+            document.getElementById('root').appendChild(container);
+            
+            // Initial render
+            renderHeatmaps(activeView);
+        }
+        
+        // Function to render heatmaps
+        function renderHeatmaps(viewType) {
+            const grid = document.getElementById('habit-grid');
+            grid.innerHTML = ''; // Clear existing cards
+            
+            habitsData.forEach(habit => {
+                const card = createHabitCard(habit, viewType);
+                grid.appendChild(card);
+            });
+        }
+        
+        // Function to create a habit card
+        function createHabitCard(habit, viewType) {
+            const card = document.createElement('div');
+            card.className = 'habit-card';
+            
+            // Card header with emoji and name
+            const header = document.createElement('div');
+            header.className = 'card-header';
+            
+            const emoji = document.createElement('span');
+            emoji.className = 'emoji';
+            emoji.textContent = habit.emoji;
+            
+            const name = document.createElement('h3');
+            name.className = 'habit-name';
+            name.textContent = habit.name;
+            
+            header.appendChild(emoji);
+            header.appendChild(name);
+            card.appendChild(header);
+            
+            // Create heatmap based on view type
+            const heatmap = document.createElement('div');
+            heatmap.className = `heatmap ${viewType}`;
+            
+            const daysData = habit.daysData || [];
+            
+            switch(viewType) {
+                case 'weekly':
+                    createWeeklyHeatmap(heatmap, daysData, habit.color);
+                    break;
+                case 'monthly':
+                    createMonthlyHeatmap(heatmap, daysData, habit.color);
+                    break;
+                case 'yearly':
+                    createYearlyHeatmap(heatmap, daysData, habit.color);
+                    break;
+            }
+            
+            card.appendChild(heatmap);
+            return card;
+        }
+        
+        function createWeeklyHeatmap(container, daysData, color) {
+            // Get last 7 days
+            const daysToShow = daysData.slice(-7);
+            
+            // Add day cells
+            daysToShow.forEach((day, index) => {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day';
+                
+                if (day.completed) {
+                    dayCell.className += ' completed';
+                    dayCell.style.backgroundColor = color;
+                } else {
+                    dayCell.className += ' missed';
+                }
+                
+                // Add day label (e.g., "Mon", "Tue", etc.)
+                const dayLabel = document.createElement('div');
+                dayLabel.className = 'day-label';
+                
+                // Get day name
+                const date = new Date(day.date);
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const dayName = dayNames[date.getDay()];
+                
+                dayCell.title = `${dayName}, ${day.date}: ${day.completed ? 'Completed' : 'Not completed'}`;
+                
+                container.appendChild(dayCell);
+            });
+            
+            // If we have fewer than 7 days, fill in the gaps
+            const padding = 7 - daysToShow.length;
+            for (let i = 0; i < padding; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day empty';
+                container.appendChild(emptyCell);
+            }
+        }
+        
+        function createMonthlyHeatmap(container, daysData, color) {
+            // Get days in current month
+            const today = new Date();
+            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            
+            // Get first day of month (0 = Sunday, 1 = Monday, etc.)
+            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+            
+            // Add empty cells for days before the first of the month
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day empty';
+                container.appendChild(emptyCell);
+            }
+            
+            // Add day cells for each day of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDate = new Date(today.getFullYear(), today.getMonth(), day);
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day';
+                
+                // Find matching day in data or assume not completed if past today
+                const dayData = daysData.find(d => {
+                    const dDate = new Date(d.date);
+                    return dDate.getDate() === day && 
+                           dDate.getMonth() === today.getMonth() && 
+                           dDate.getFullYear() === today.getFullYear();
+                });
+                
+                if (dayData && dayData.completed) {
+                    dayCell.className += ' completed';
+                    dayCell.style.backgroundColor = color;
+                    dayCell.title = `${dayData.date}: Completed`;
+                } else if (dayDate <= today) {
+                    dayCell.className += ' missed';
+                    dayCell.title = dayData ? 
+                        `${dayData.date}: Not completed` : 
+                        `${dayDate.toISOString().split('T')[0]}: No data`;
+                } else {
+                    dayCell.className += ' empty';
+                }
+                
+                container.appendChild(dayCell);
+            }
+            
+            // Fill remaining grid cells to complete the grid
+            const totalCells = 7 * 5; // 5 weeks, 7 days per week
+            const cellsCount = firstDayOfMonth + daysInMonth;
+            const remainingCells = totalCells - cellsCount;
+            
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day empty';
+                container.appendChild(emptyCell);
+            }
+        }
+        
+        function createYearlyHeatmap(container, daysData, color) {
+            // Get up to last 365 days of data
+            const daysToShow = daysData.slice(-365);
+            
+            // Create a mini-calendar layout with 26 weeks and 7 days per week
+            // This creates a compact yearly view
+            for (let i = 0; i < Math.min(daysToShow.length, 26 * 7); i++) {
+                const day = daysToShow[daysToShow.length - 1 - i]; // Reverse order to show most recent on the right
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day';
+                
+                if (day.completed) {
+                    dayCell.className += ' completed';
+                    dayCell.style.backgroundColor = color;
+                    dayCell.title = `${day.date}: Completed`;
+                } else {
+                    dayCell.className += ' missed';
+                    dayCell.title = `${day.date}: Not completed`;
+                }
+                
+                container.appendChild(dayCell);
+            }
+            
+            // Fill in any remaining cells to complete the grid
+            const totalCells = 26 * 7;
+            const remainingCells = totalCells - Math.min(daysToShow.length, totalCells);
+            
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day empty';
+                container.appendChild(emptyCell);
+            }
+        }
+        
+        // Initialize the app
+        initApp();
+    </script>
+</body>
+</html>
