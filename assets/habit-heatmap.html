@@ -105,14 +105,23 @@
             font-size: 9px;
             color: #9ca3af;
             text-align: center;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
         
         .month-label {
-            font-size: 10px;
-            color: #9ca3af;
+            font-size: 12px;
+            color: #e5e7eb;
             margin-bottom: 8px;
             text-align: center;
-            font-weight: 500;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background-color: rgba(31, 41, 55, 0.5);
+            padding: 4px 0;
+            border-radius: 4px;
+            margin-top: 5px;
         }
         
         .day {
@@ -311,29 +320,33 @@
         }
         
         function createWeeklyHeatmap(container, daysData, color) {
-            // Create weekday labels container
-            const weekdayLabels = document.createElement('div');
-            weekdayLabels.className = 'weekday-labels';
+            // Clear the container first
+            container.innerHTML = '';
             
-            // Weekday names (start with Monday)
-            const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            // Create weekday labels container once
+            if (!container.previousSibling || !container.previousSibling.classList || !container.previousSibling.classList.contains('weekday-labels')) {
+                const weekdayLabels = document.createElement('div');
+                weekdayLabels.className = 'weekday-labels';
+                
+                // Weekday names (start with Monday)
+                const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                
+                // Add weekday labels
+                dayNames.forEach(day => {
+                    const label = document.createElement('div');
+                    label.className = 'weekday-label';
+                    label.textContent = day;
+                    weekdayLabels.appendChild(label);
+                });
+                
+                // Add weekday labels before the heatmap
+                container.parentNode.insertBefore(weekdayLabels, container);
+            }
             
-            // Add weekday labels
-            dayNames.forEach(day => {
-                const label = document.createElement('div');
-                label.className = 'weekday-label';
-                label.textContent = day;
-                weekdayLabels.appendChild(label);
-            });
-            
-            // Add weekday labels before the heatmap
-            container.parentNode.insertBefore(weekdayLabels, container);
-            
-            // Get last 7 days, but reorder them to start on Monday
+            // Get last 7 days
             const last7Days = daysData.slice(-7);
-            const today = new Date();
             
-            // Create arrays for each day of the week
+            // Organize days by weekday (Mon-Sun)
             const daysByWeekday = Array(7).fill(null);
             
             // Sort data by day of week (0 = Monday, 6 = Sunday)
@@ -343,6 +356,9 @@
                 if (dayOfWeek < 0) dayOfWeek = 6; // Handle Sunday
                 daysByWeekday[dayOfWeek] = day;
             });
+            
+            // Weekday names for tooltips
+            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             
             // Add day cells
             daysByWeekday.forEach((day, index) => {
@@ -377,6 +393,9 @@
         }
         
         function createMonthlyHeatmap(container, daysData, color) {
+            // Clear the container first
+            container.innerHTML = '';
+            
             // Get current month and year
             const today = new Date();
             const currentMonth = today.getMonth();
@@ -384,29 +403,31 @@
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                                'July', 'August', 'September', 'October', 'November', 'December'];
             
-            // Add month label
-            const monthLabel = document.createElement('div');
-            monthLabel.className = 'month-label';
-            monthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-            container.parentNode.insertBefore(monthLabel, container);
-            
-            // Create weekday labels container
-            const weekdayLabels = document.createElement('div');
-            weekdayLabels.className = 'weekday-labels';
-            
-            // Weekday names (start with Monday)
-            const dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-            
-            // Add weekday labels
-            dayNames.forEach(day => {
-                const label = document.createElement('div');
-                label.className = 'weekday-label';
-                label.textContent = day;
-                weekdayLabels.appendChild(label);
-            });
-            
-            // Add weekday labels before the heatmap
-            container.parentNode.insertBefore(weekdayLabels, container);
+            // Add month label - check if it exists first
+            if (!container.previousSibling || !container.previousSibling.classList || !container.previousSibling.classList.contains('month-label')) {
+                const monthLabel = document.createElement('div');
+                monthLabel.className = 'month-label';
+                monthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                container.parentNode.insertBefore(monthLabel, container);
+                
+                // Create weekday labels container
+                const weekdayLabels = document.createElement('div');
+                weekdayLabels.className = 'weekday-labels';
+                
+                // Weekday names (start with Monday)
+                const dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                
+                // Add weekday labels
+                dayNames.forEach(day => {
+                    const label = document.createElement('div');
+                    label.className = 'weekday-label';
+                    label.textContent = day;
+                    weekdayLabels.appendChild(label);
+                });
+                
+                // Add weekday labels before the heatmap
+                container.parentNode.insertBefore(weekdayLabels, container);
+            }
             
             // Get days in current month
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -484,132 +505,59 @@
         }
         
         function createYearlyHeatmap(container, daysData, color) {
-            // Get current date to display year
-            const today = new Date();
-            const currentYear = today.getFullYear();
-            
-            // Add year label
-            const yearLabel = document.createElement('div');
-            yearLabel.className = 'month-label';
-            yearLabel.textContent = currentYear.toString();
-            container.parentNode.insertBefore(yearLabel, container);
-            
-            // Weekday labels (vertical for yearly view)
-            const dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-            
-            // Month labels (horizontal for yearly view)
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            
-            // Create month boxes (52 weeks, one per each week of year)
-            const weeksInYear = 52;
-            
-            // Sort days by date (earliest first)
-            const sortedDays = [...daysData].sort((a, b) => {
-                return new Date(a.date) - new Date(b.date);
-            });
-            
-            // Take only last 365 days
-            const last365Days = sortedDays.slice(-365);
-            
-            // Group days by week
-            const weekMap = new Map();
-            
-            // Initialize the display - we'll show 52 weeks (1 year) x 7 days (week)
-            // Start with empty grid
-            for (let weekNum = 0; weekNum < weeksInYear; weekNum++) {
-                for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
-                    const dayCell = document.createElement('div');
-                    dayCell.className = 'day empty';
-                    
-                    // Add animation delay based on position
-                    const delayMs = (weekNum * 10) + (dayInWeek * 15);
-                    dayCell.style.animationDelay = `${delayMs}ms`;
-                    
-                    container.appendChild(dayCell);
-                }
-            }
-            
-            // Clear container
+            // Clear the container first
             container.innerHTML = '';
             
-            // Create cells for each week and day
-            let currentIndex = 0;
-            let previousMonth = -1;
-            
-            // Loop through all days in the year
-            for (let weekNum = 0; weekNum < weeksInYear; weekNum++) {
-                // Create week column
-                const weekColumn = document.createElement('div');
-                weekColumn.style.display = 'grid';
-                weekColumn.style.gridTemplateRows = 'repeat(7, 1fr)';
-                weekColumn.style.gap = '2px';
-                
-                // Add each day of the week
-                for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
-                    const dayCell = document.createElement('div');
-                    dayCell.className = 'day';
-                    
-                    // Check if we have data for this day
-                    if (currentIndex < last365Days.length) {
-                        const dayData = last365Days[currentIndex];
-                        const date = new Date(dayData.date);
-                        
-                        // Only render if day of week matches
-                        // Convert JS day (0=Sun, 1=Mon) to our format (0=Mon, 6=Sun)
-                        let jsDay = date.getDay();
-                        const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
-                        
-                        if (dayOfWeek === dayInWeek) {
-                            // Add month label when month changes
-                            const month = date.getMonth();
-                            if (month !== previousMonth && dayInWeek === 0) {
-                                previousMonth = month;
-                                
-                                // Add month label to the top of this week column
-                                const monthLabel = document.createElement('div');
-                                monthLabel.className = 'weekday-label';
-                                monthLabel.textContent = monthNames[month];
-                                monthLabel.style.position = 'absolute';
-                                monthLabel.style.top = '-15px';
-                                monthLabel.style.left = '0';
-                                monthLabel.style.width = '100%';
-                                monthLabel.style.textAlign = 'center';
-                                weekColumn.style.position = 'relative';
-                                weekColumn.appendChild(monthLabel);
-                            }
-                            
-                            if (dayData.completed) {
-                                dayCell.className += ' completed';
-                                dayCell.style.backgroundColor = color;
-                                
-                                // Add animation delay based on position
-                                const delayMs = weekNum * 20;
-                                dayCell.style.animationDelay = `${delayMs}ms`;
-                                
-                                dayCell.title = `${dayData.date}: Completed`;
-                            } else {
-                                dayCell.className += ' missed';
-                                dayCell.title = `${dayData.date}: Not completed`;
-                            }
-                            
-                            currentIndex++;
-                        } else {
-                            dayCell.className += ' empty';
-                        }
-                    } else {
-                        dayCell.className += ' empty';
-                    }
-                    
-                    weekColumn.appendChild(dayCell);
-                }
-                
-                container.appendChild(weekColumn);
-                
-                // If we've processed all data, stop adding more weeks
-                if (currentIndex >= last365Days.length) {
-                    break;
-                }
+            // Add simple year label
+            if (!container.previousSibling || !container.previousSibling.classList || !container.previousSibling.classList.contains('month-label')) {
+                const yearLabel = document.createElement('div');
+                yearLabel.className = 'month-label';
+                yearLabel.textContent = new Date().getFullYear().toString();
+                container.parentNode.insertBefore(yearLabel, container);
             }
+            
+            // Keep it simple for now - display a simplified version
+            // Take only last 365 days of data
+            const last365Days = daysData.slice(-365);
+            
+            // Change the grid layout
+            container.style.display = 'grid';
+            container.style.gridTemplateColumns = 'repeat(52, 1fr)';
+            container.style.gridTemplateRows = 'repeat(7, 1fr)';
+            container.style.gap = '2px';
+            
+            // Create a cell for each day (52 weeks × 7 days)
+            const totalDays = 52 * 7;
+            const emptyCellsCount = totalDays - last365Days.length;
+            
+            // Fill with empty cells first (left side)
+            for (let i = 0; i < emptyCellsCount; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day empty';
+                container.appendChild(emptyCell);
+            }
+            
+            // Then add cells with data (right side, most recent at the end)
+            last365Days.forEach((day, index) => {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day';
+                
+                if (day.completed) {
+                    dayCell.className += ' completed';
+                    dayCell.style.backgroundColor = color;
+                    
+                    // Add animation delay based on position for a wave effect
+                    const delayMs = index * 2;
+                    dayCell.style.animationDelay = `${delayMs}ms`;
+                    
+                    dayCell.title = `${day.date}: Completed`;
+                } else {
+                    dayCell.className += ' missed';
+                    dayCell.title = `${day.date}: Not completed`;
+                }
+                
+                container.appendChild(dayCell);
+            });
         }
         
         // Initialize the app
