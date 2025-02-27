@@ -96,17 +96,4 @@ except Exception as e:
 html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habits_data))
 
 # Display the HTML component
-components.html(html_content, height=650, scrolling=False)
-
-# Add descriptive text
-st.markdown("""
-### About This Visualization
-
-This heatmap visualization shows your habit completion patterns over different time periods.
-- **Last 7 Days**: See your recent performance
-- **Current Month**: View patterns throughout this month
-- **Full Year**: Identify long-term trends
-
-Each colored square represents a day where you completed the habit, while grey squares indicate missed days.
-The color of each habit matches the color scheme defined in your configuration.
-""")
+components.html(html_content, height=750, scrolling=False)
