@@ -61,7 +61,7 @@ try:
             else:
                 st.error("Failed to get meaningful advice from Claude")
                 with debug_expander:
-                    st.markdown("Claude response:", advice)
+                    st.markdown(f"Claude response: {advice}")
     else:
         st.error("No data available for analysis")
         
