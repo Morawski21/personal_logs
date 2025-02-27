@@ -29,13 +29,20 @@ def generate_context(df: pd.DataFrame):
     last_7_days = df.tail(7)
     last_30_days = df.tail(30)
     
-    # Create day-specific insights
-    weekday_avg = last_30_days[~last_30_days.index.weekday.isin([5, 6])]['Razem'].mean()
-    weekend_avg = last_30_days[last_30_days.index.weekday.isin([5, 6])]['Razem'].mean()
-    
-    # Get same weekday average from past data
-    same_weekday_data = last_30_days[last_30_days.index.weekday == today.weekday()]
-    same_weekday_avg = same_weekday_data['Razem'].mean() if not same_weekday_data.empty else 0
+    # Check if 'Data' column exists for date information
+    if 'Data' in df.columns:
+        # Create day-specific insights
+        weekday_avg = last_30_days[~last_30_days['Data'].dt.weekday.isin([5, 6])]['Razem'].mean()
+        weekend_avg = last_30_days[last_30_days['Data'].dt.weekday.isin([5, 6])]['Razem'].mean()
+        
+        # Get same weekday average from past data
+        same_weekday_data = last_30_days[last_30_days['Data'].dt.weekday == today.weekday()]
+        same_weekday_avg = same_weekday_data['Razem'].mean() if not same_weekday_data.empty else 0
+    else:
+        # Fallback if no date column exists
+        weekday_avg = last_30_days['Razem'].mean()
+        weekend_avg = weekday_avg
+        same_weekday_avg = weekday_avg
     
     context = (
         f"Based on the last 7 days of activity data:\n"
