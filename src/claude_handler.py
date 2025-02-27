@@ -23,14 +23,30 @@ def get_claude_client():
 def generate_context(df: pd.DataFrame):
     """Generate context about recent activities for Claude."""
     today = datetime.now()
+    today_weekday = today.strftime("%A")
+    is_weekend = today.weekday() >= 5
+    
     last_7_days = df.tail(7)
+    last_30_days = df.tail(30)
+    
+    # Create day-specific insights
+    weekday_avg = last_30_days[~last_30_days.index.weekday.isin([5, 6])]['Razem'].mean()
+    weekend_avg = last_30_days[last_30_days.index.weekday.isin([5, 6])]['Razem'].mean()
+    
+    # Get same weekday average from past data
+    same_weekday_data = last_30_days[last_30_days.index.weekday == today.weekday()]
+    same_weekday_avg = same_weekday_data['Razem'].mean() if not same_weekday_data.empty else 0
     
     context = (
         f"Based on the last 7 days of activity data:\n"
         f"Average daily productive time: {last_7_days['Razem'].mean():.0f} minutes\n"
         f"Most productive day: {last_7_days['Razem'].max():.0f} minutes\n"
         f"Least productive day: {last_7_days['Razem'].min():.0f} minutes\n\n"
-        f"Today's date: {today.strftime('%Y-%m-%d')}"
+        f"Productivity patterns:\n"
+        f"Weekday average: {weekday_avg:.0f} minutes\n"
+        f"Weekend average: {weekend_avg:.0f} minutes\n"
+        f"Average for {today_weekday}s: {same_weekday_avg:.0f} minutes\n\n"
+        f"Today is {today.strftime('%Y-%m-%d')}, a {today_weekday} {'(weekend)' if is_weekend else '(weekday)'}"
     )
     return context
 
@@ -59,16 +75,20 @@ def get_advice(df: pd.DataFrame) -> str:
         
         Based on this data, please provide:
         1. A brief analysis of my productivity patterns
-        2. Specific advice for the upcoming days.
+        2. Specific, personalized advice for today and the upcoming days
+        3. Acknowledge if today is a weekend or special day, and adjust your advice accordingly
         
-        Keep your response concise and rough. Really motivate me.
-        Reply in markdown, but tactfully. Keep it professional. Dont be overly enthusiastic.
-        I prefer continuous text, not bullet points.
+        Keep your response conversational but professional. Avoid generic advice.
+        Consider the day of the week in your recommendations - weekend productivity has different expectations than weekdays.
+        Include one specific actionable tip I can implement today.
+        
+        Reply in markdown format. Use headings and occasional emphasis for readability.
+        Be motivational but realistic - acknowledge both progress and areas for improvement.
         """
         
         response = client.messages.create(
             model="claude-3-5-haiku-latest",
-            max_tokens=500,
+            max_tokens=750,
             temperature=0.7,
             messages=[{"role": "user", "content": prompt}]
         )
