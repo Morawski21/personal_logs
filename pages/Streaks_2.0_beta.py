@@ -79,7 +79,7 @@ def calculate_longest_streak(series):
             
     return max_streak
 
-# Create data for React component
+# Create data for habit cards
 habits_data = []
 
 # Process binary habits
@@ -109,323 +109,246 @@ for habit in ROW2_HABITS:
 st.title("🎯 Habit Streaks 2.0 (Beta)")
 st.caption("A new and improved habit tracker with modern visuals and reactive design")
 
-# Create JS for React component integration
-component_js = """
-<script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-<script src="https://unpkg.com/lucide-react@latest"></script>
-
-<div id="react-root" style="font-family: 'Inter', system-ui, sans-serif;"></div>
-
-<style>
-  body {
-    background-color: transparent;
-    margin: 0;
-    padding: 0;
-  }
-  
-  * {
-    box-sizing: border-box;
-  }
-  
-  .text-white {
-    color: white;
-  }
-  
-  .text-gray-400 {
-    color: #9ca3af;
-  }
-  
-  .text-green-400 {
-    color: #4ade80;
-  }
-  
-  .text-purple-400 {
-    color: #c084fc;
-  }
-  
-  .bg-gray-900 {
-    background-color: #111827;
-  }
-  
-  .font-semibold {
-    font-weight: 600;
-  }
-  
-  .font-bold {
-    font-weight: 700;
-  }
-  
-  .text-xs {
-    font-size: 0.75rem;
-  }
-  
-  .text-sm {
-    font-size: 0.875rem;
-  }
-  
-  .text-lg {
-    font-size: 1.125rem;
-  }
-  
-  .text-xl {
-    font-size: 1.25rem;
-  }
-  
-  .text-2xl {
-    font-size: 1.5rem;
-  }
-  
-  .leading-tight {
-    line-height: 1.25;
-  }
-  
-  .p-3 {
-    padding: 0.75rem;
-  }
-  
-  .p-4 {
-    padding: 1rem;
-  }
-  
-  .mb-2 {
-    margin-bottom: 0.5rem;
-  }
-  
-  .space-x-1 > :not([hidden]) ~ :not([hidden]) {
-    margin-left: 0.25rem;
-  }
-  
-  .space-x-2 > :not([hidden]) ~ :not([hidden]) {
-    margin-left: 0.5rem;
-  }
-  
-  .space-y-0\\.5 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0.125rem;
-  }
-  
-  .gap-1\\.5 {
-    gap: 0.375rem;
-  }
-  
-  .gap-3 {
-    gap: 0.75rem;
-  }
-  
-  .gap-4 {
-    gap: 1rem;
-  }
-  
-  .rounded-lg {
-    border-radius: 0.5rem;
-  }
-  
-  .shadow-lg {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  }
-  
-  .relative {
-    position: relative;
-  }
-  
-  .absolute {
-    position: absolute;
-  }
-  
-  .inset-0 {
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-  }
-  
-  .flex {
-    display: flex;
-  }
-  
-  .grid {
-    display: grid;
-  }
-  
-  .grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  
-  .grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  
-  .items-center {
-    align-items: center;
-  }
-  
-  .justify-between {
-    justify-content: space-between;
-  }
-  
-  .w-3 {
-    width: 0.75rem;
-  }
-  
-  .h-3 {
-    height: 0.75rem;
-  }
-  
-  .w-4 {
-    width: 1rem;
-  }
-  
-  .h-4 {
-    height: 1rem;
-  }
-  
-  .w-full {
-    width: 100%;
-  }
-  
-  .opacity-20 {
-    opacity: 0.2;
-  }
-  
-  .overflow-hidden {
-    overflow: hidden;
-  }
-  
-  .transition-colors {
-    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-  }
-  
-  .duration-500 {
-    transition-duration: 500ms;
-  }
-  
-  .whitespace-nowrap {
-    white-space: nowrap;
-  }
-</style>
-
-<script type="text/babel">
-  const { useState } = React;
-  const { Flame, Sparkles, Trophy } = lucideReact;
-  
-  const HabitCard = ({ name, emoji, currentStreak, bestStreak, isActive = true }) => {
-    const isRecordBreaking = currentStreak >= bestStreak && currentStreak > 0;
-  
-    return (
-      <div className="p-3 bg-gray-900 rounded-lg shadow-lg relative overflow-hidden">
-        {isRecordBreaking && (
-          <>
-            <div 
-              className="absolute inset-0 opacity-20"
-              style={{
-                background: `
-                  radial-gradient(
-                    100% 100% at 0% 0%,
-                    rgb(236, 72, 153) 0%,
-                    rgb(147, 51, 234) 25%,
-                    rgb(45, 212, 191) 50%,
-                    transparent 75%
-                  )
-                `,
-                animation: 'moveGradient 8s ease-in-out infinite'
-              }}
-            />
-            <style>
-              {`
-                @keyframes moveGradient {
-                  0% {
-                    transform: translate(-25%, -25%) rotate(0deg);
-                  }
-                  50% {
-                    transform: translate(25%, 25%) rotate(180deg);
-                  }
-                  100% {
-                    transform: translate(-25%, -25%) rotate(360deg);
-                  }
-                }
-              `}
-            </style>
-          </>
-        )}
+# Create a simple HTML component with custom CSS and vanilla JS
+html_content = """
+<html>
+<head>
+    <style>
+        .card {
+            background-color: #111827;
+            border-radius: 8px;
+            padding: 16px;
+            color: white;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
         
-        <div className="flex items-center justify-between mb-2 relative">
-          <div className="flex items-center space-x-2">
-            <span className="text-xl">{emoji}</span>
-            <h3 className="text-lg font-semibold text-white">{name}</h3>
-          </div>
-        </div>
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            padding: 16px;
+        }
         
-        <div className="grid grid-cols-2 gap-3 relative">
-          <div className="space-y-0.5">
-            <p className="text-xs text-gray-400">Current streak</p>
-            <p className="text-2xl font-bold text-white leading-tight">{currentStreak}d</p>
-            <div className={`flex items-center gap-1.5 transition-colors duration-500 ${
-              isRecordBreaking ? 'text-purple-400' : (currentStreak > 0 ? 'text-green-400' : 'text-gray-400')
-            }`}>
-              <span className="text-sm whitespace-nowrap">
-                {isRecordBreaking ? 'Record-breaking' : (currentStreak > 0 ? 'Active' : 'Inactive')}
-              </span>
-              {isRecordBreaking ? (
-                <Sparkles className="w-3 h-3" />
-              ) : (
-                currentStreak > 0 ? <Flame className="w-3 h-3" /> : null
-              )}
-            </div>
-          </div>
-          
-          <div className="space-y-0.5">
-            <p className="text-xs text-gray-400">Best streak</p>
-            <p className="text-2xl font-bold text-white leading-tight">{bestStreak}d</p>
-            <div className="flex items-center space-x-1 text-gray-400">
-              <span className="text-sm">Best</span>
-              <Trophy className="w-3 h-3" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  const HabitGrid = ({ habits }) => {
-    return (
-      <div className="p-4 w-full">
-        <div className="grid grid-cols-3 gap-4">
-          {habits.map((habit, index) => (
-            <HabitCard
-              key={habit.name}
-              {...habit}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
-  
-  // Get habits data from Streamlit
-  const habitsData = JSON.parse('{{habits_data}}');
-  
-  // Render the component
-  ReactDOM.render(
-    <HabitGrid habits={habitsData} />,
-    document.getElementById('react-root')
-  );
-</script>
-"""
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .emoji {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+        
+        .habit-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .card-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .streak-box {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .streak-label {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+        
+        .streak-value {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+        
+        .streak-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+        
+        .record-breaking {
+            color: #c084fc;
+        }
+        
+        .active {
+            color: #4ade80;
+        }
+        
+        .inactive {
+            color: #9ca3af;
+        }
+        
+        .best {
+            color: #9ca3af;
+        }
+        
+        .record-background {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            opacity: 0.2;
+            background: radial-gradient(
+                100% 100% at 0% 0%,
+                rgb(236, 72, 153) 0%,
+                rgb(147, 51, 234) 25%,
+                rgb(45, 212, 191) 50%,
+                transparent 75%
+            );
+            animation: moveGradient 8s ease-in-out infinite;
+        }
+        
+        @keyframes moveGradient {
+            0% {
+                transform: translate(-25%, -25%) rotate(0deg);
+            }
+            50% {
+                transform: translate(25%, 25%) rotate(180deg);
+            }
+            100% {
+                transform: translate(-25%, -25%) rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/javascript">
+        // Get habits data from Streamlit
+        const habitsData = JSON.parse('%s');
+        
+        // Create the habit grid
+        const habitGrid = document.createElement('div');
+        habitGrid.className = 'grid-container';
+        
+        // Create each habit card
+        habitsData.forEach(habit => {
+            const isRecordBreaking = habit.currentStreak >= habit.bestStreak && habit.currentStreak > 0;
+            const isActive = habit.currentStreak > 0;
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Add record-breaking background if applicable
+            if (isRecordBreaking) {
+                const background = document.createElement('div');
+                background.className = 'record-background';
+                card.appendChild(background);
+            }
+            
+            // Card header with emoji and name
+            const header = document.createElement('div');
+            header.className = 'card-header';
+            
+            const emoji = document.createElement('span');
+            emoji.className = 'emoji';
+            emoji.textContent = habit.emoji;
+            
+            const name = document.createElement('h3');
+            name.className = 'habit-name';
+            name.textContent = habit.name;
+            
+            header.appendChild(emoji);
+            header.appendChild(name);
+            card.appendChild(header);
+            
+            // Card content with streak info
+            const content = document.createElement('div');
+            content.className = 'card-content';
+            
+            // Current streak section
+            const currentStreakBox = document.createElement('div');
+            currentStreakBox.className = 'streak-box';
+            
+            const currentLabel = document.createElement('p');
+            currentLabel.className = 'streak-label';
+            currentLabel.textContent = 'Current streak';
+            
+            const currentValue = document.createElement('p');
+            currentValue.className = 'streak-value';
+            currentValue.textContent = habit.currentStreak + 'd';
+            
+            const currentStatus = document.createElement('div');
+            currentStatus.className = isRecordBreaking ? 
+                'streak-status record-breaking' : 
+                (isActive ? 'streak-status active' : 'streak-status inactive');
+            
+            const statusText = document.createElement('span');
+            statusText.textContent = isRecordBreaking ? 'Record-breaking' : (isActive ? 'Active' : 'Inactive');
+            
+            const statusIcon = document.createElement('span');
+            statusIcon.textContent = isRecordBreaking ? '✨' : (isActive ? '🔥' : '');
+            
+            currentStatus.appendChild(statusText);
+            currentStatus.appendChild(statusIcon);
+            
+            currentStreakBox.appendChild(currentLabel);
+            currentStreakBox.appendChild(currentValue);
+            currentStreakBox.appendChild(currentStatus);
+            
+            // Best streak section
+            const bestStreakBox = document.createElement('div');
+            bestStreakBox.className = 'streak-box';
+            
+            const bestLabel = document.createElement('p');
+            bestLabel.className = 'streak-label';
+            bestLabel.textContent = 'Best streak';
+            
+            const bestValue = document.createElement('p');
+            bestValue.className = 'streak-value';
+            bestValue.textContent = habit.bestStreak + 'd';
+            
+            const bestStatus = document.createElement('div');
+            bestStatus.className = 'streak-status best';
+            
+            const bestText = document.createElement('span');
+            bestText.textContent = 'Best';
+            
+            const bestIcon = document.createElement('span');
+            bestIcon.textContent = '🏆';
+            
+            bestStatus.appendChild(bestText);
+            bestStatus.appendChild(bestIcon);
+            
+            bestStreakBox.appendChild(bestLabel);
+            bestStreakBox.appendChild(bestValue);
+            bestStreakBox.appendChild(bestStatus);
+            
+            content.appendChild(currentStreakBox);
+            content.appendChild(bestStreakBox);
+            card.appendChild(content);
+            
+            habitGrid.appendChild(card);
+        });
+        
+        document.getElementById('root').appendChild(habitGrid);
+    </script>
+</body>
+</html>
+""" % json.dumps(habits_data)
 
-# Replace placeholder with actual data
-component_js = component_js.replace("{{habits_data}}", json.dumps(habits_data))
-
-# Display the React component
-components.html(component_js, height=450, scrolling=False)
+# Display the HTML component
+components.html(html_content, height=450, scrolling=False)
 
 # Add explanation about the new version
 st.markdown("---")
 st.subheader("About Streaks 2.0")
 st.markdown("""
-This new version of the habit tracker uses a custom React component that offers improved visual feedback:
+This new version of the habit tracker uses a custom component that offers improved visual feedback:
 
 - **Record-breaking streaks** are highlighted with animated gradient backgrounds
 - **Active streaks** are clearly marked with flame icons
