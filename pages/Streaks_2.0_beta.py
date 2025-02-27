@@ -114,45 +114,57 @@ st.caption("A new and improved habit tracker with modern visuals and reactive de
 html_template = """
 <html>
 <head>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
         .card {
             background-color: #111827;
-            border-radius: 8px;
-            padding: 16px;
+            border-radius: 12px;
+            padding: 20px;
             color: white;
             margin-bottom: 16px;
             position: relative;
             overflow: hidden;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            height: 160px;
+            box-sizing: border-box;
         }
         
         .grid-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
+            gap: 20px;
             padding: 16px;
+            margin-bottom: 20px;
         }
         
         .card-header {
             display: flex;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
         
         .emoji {
-            font-size: 24px;
-            margin-right: 12px;
+            font-size: 28px;
+            margin-right: 16px;
+            line-height: 1;
         }
         
         .habit-name {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
+            margin: 0;
         }
         
         .card-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 16px;
         }
         
         .streak-box {
@@ -161,15 +173,17 @@ html_template = """
         }
         
         .streak-label {
-            font-size: 12px;
+            font-size: 14px;
             color: #9ca3af;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            margin-top: 0;
         }
         
         .streak-value {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 700;
-            line-height: 1.25;
+            line-height: 1.2;
+            margin: 0 0 6px 0;
         }
         
         .streak-status {
@@ -177,6 +191,7 @@ html_template = """
             align-items: center;
             gap: 6px;
             font-size: 14px;
+            font-weight: 500;
         }
         
         .record-breaking {
@@ -195,32 +210,43 @@ html_template = """
             color: #9ca3af;
         }
         
+        .active-background {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            opacity: 0.05;
+            background-color: #4ade80;
+        }
+        
         .record-background {
             position: absolute;
             top: 0;
             right: 0;
             bottom: 0;
             left: 0;
-            opacity: 0.2;
+            opacity: 0.15;
             background: radial-gradient(
-                100% 100% at 0% 0%,
+                circle at center,
                 rgb(236, 72, 153) 0%,
-                rgb(147, 51, 234) 25%,
-                rgb(45, 212, 191) 50%,
-                transparent 75%
+                rgb(147, 51, 234) 35%,
+                rgb(45, 212, 191) 70%,
+                transparent 100%
             );
+            background-size: 200% 200%;
             animation: moveGradient 8s ease-in-out infinite;
         }
         
         @keyframes moveGradient {
             0% {
-                transform: translate(-25%, -25%) rotate(0deg);
+                background-position: 0% 0%;
             }
             50% {
-                transform: translate(25%, 25%) rotate(180deg);
+                background-position: 100% 100%;
             }
             100% {
-                transform: translate(-25%, -25%) rotate(360deg);
+                background-position: 0% 0%;
             }
         }
     </style>
@@ -244,10 +270,14 @@ html_template = """
             const card = document.createElement('div');
             card.className = 'card';
             
-            // Add record-breaking background if applicable
+            // Add background based on streak status
             if (isRecordBreaking) {
                 const background = document.createElement('div');
                 background.className = 'record-background';
+                card.appendChild(background);
+            } else if (isActive) {
+                const background = document.createElement('div');
+                background.className = 'active-background';
                 card.appendChild(background);
             }
             
@@ -346,7 +376,7 @@ html_template = """
 html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habits_data))
 
 # Display the HTML component
-components.html(html_content, height=450, scrolling=False)
+components.html(html_content, height=520, scrolling=False)
 
 # Add explanation about the new version
 st.markdown("---")
