@@ -128,30 +128,3 @@ html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habit
 
 # Display the HTML component
 components.html(html_content, height=520, scrolling=False)
-
-# Add explanation about the new version
-st.markdown("---")
-st.subheader("About Streaks 2.0")
-st.markdown("""
-This new version of the habit tracker uses a custom component that offers improved visual feedback:
-
-- **Record-breaking streaks** are highlighted with animated gradient backgrounds
-- **Active streaks** are clearly marked with flame icons
-- **Modern, consistent design** with better visual organization
-
-The component pulls data from the same Excel file and applies the same logic as the original Streaks page, 
-ensuring consistent streak calculations.
-""")
-
-# Add a space to compare with original
-comparison_tab1, comparison_tab2 = st.tabs(["Streaks 2.0 (New)", "Original Streaks"])
-
-with comparison_tab1:
-    st.markdown("The new version features:")
-    st.markdown("- ✨ Animated backgrounds for record-breaking streaks")
-    st.markdown("- 🎨 Consistent color scheme and typography")
-    st.markdown("- 📱 Responsive card layout")
-    st.markdown("- 🔥 Clear visual indicators for active vs. inactive streaks")
-
-with comparison_tab2:
-    st.markdown("The original version uses standard Streamlit metrics and expanders.")
