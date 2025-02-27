@@ -1,0 +1,258 @@
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .card {
+            background-color: #111827;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            height: 160px;
+            box-sizing: border-box;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .emoji {
+            font-size: 28px;
+            margin-right: 16px;
+            line-height: 1;
+        }
+        
+        .habit-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .card-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .streak-box {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .streak-label {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-bottom: 6px;
+            margin-top: 0;
+        }
+        
+        .streak-value {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 0 0 6px 0;
+        }
+        
+        .streak-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .record-breaking {
+            color: #c084fc;
+        }
+        
+        .active {
+            color: #4ade80;
+        }
+        
+        .inactive {
+            color: #9ca3af;
+        }
+        
+        .best {
+            color: #9ca3af;
+        }
+        
+        .active-background {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            opacity: 0.05;
+            background-color: #4ade80;
+        }
+        
+        .record-background {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            opacity: 0.15;
+            background: radial-gradient(
+                circle at center,
+                rgb(236, 72, 153) 0%,
+                rgb(147, 51, 234) 35%,
+                rgb(45, 212, 191) 70%,
+                transparent 100%
+            );
+            background-size: 200% 200%;
+            animation: moveGradient 8s ease-in-out infinite;
+        }
+        
+        @keyframes moveGradient {
+            0% {
+                background-position: 0% 0%;
+            }
+            50% {
+                background-position: 100% 100%;
+            }
+            100% {
+                background-position: 0% 0%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/javascript">
+        // Get habits data from Streamlit
+        const habitsData = HABITS_DATA_PLACEHOLDER;
+        
+        // Create the habit grid
+        const habitGrid = document.createElement('div');
+        habitGrid.className = 'grid-container';
+        
+        // Create each habit card
+        habitsData.forEach(habit => {
+            const isRecordBreaking = habit.currentStreak >= habit.bestStreak && habit.currentStreak > 0;
+            const isActive = habit.currentStreak > 0;
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Add background based on streak status
+            if (isRecordBreaking) {
+                const background = document.createElement('div');
+                background.className = 'record-background';
+                card.appendChild(background);
+            } else if (isActive) {
+                const background = document.createElement('div');
+                background.className = 'active-background';
+                card.appendChild(background);
+            }
+            
+            // Card header with emoji and name
+            const header = document.createElement('div');
+            header.className = 'card-header';
+            
+            const emoji = document.createElement('span');
+            emoji.className = 'emoji';
+            emoji.textContent = habit.emoji;
+            
+            const name = document.createElement('h3');
+            name.className = 'habit-name';
+            name.textContent = habit.name;
+            
+            header.appendChild(emoji);
+            header.appendChild(name);
+            card.appendChild(header);
+            
+            // Card content with streak info
+            const content = document.createElement('div');
+            content.className = 'card-content';
+            
+            // Current streak section
+            const currentStreakBox = document.createElement('div');
+            currentStreakBox.className = 'streak-box';
+            
+            const currentLabel = document.createElement('p');
+            currentLabel.className = 'streak-label';
+            currentLabel.textContent = 'Current streak';
+            
+            const currentValue = document.createElement('p');
+            currentValue.className = 'streak-value';
+            currentValue.textContent = habit.currentStreak + 'd';
+            
+            const currentStatus = document.createElement('div');
+            currentStatus.className = isRecordBreaking ? 
+                'streak-status record-breaking' : 
+                (isActive ? 'streak-status active' : 'streak-status inactive');
+            
+            const statusText = document.createElement('span');
+            statusText.textContent = isRecordBreaking ? 'Record-breaking' : (isActive ? 'Active' : 'Inactive');
+            
+            const statusIcon = document.createElement('span');
+            statusIcon.textContent = isRecordBreaking ? '✨' : (isActive ? '🔥' : '');
+            
+            currentStatus.appendChild(statusText);
+            currentStatus.appendChild(statusIcon);
+            
+            currentStreakBox.appendChild(currentLabel);
+            currentStreakBox.appendChild(currentValue);
+            currentStreakBox.appendChild(currentStatus);
+            
+            // Best streak section
+            const bestStreakBox = document.createElement('div');
+            bestStreakBox.className = 'streak-box';
+            
+            const bestLabel = document.createElement('p');
+            bestLabel.className = 'streak-label';
+            bestLabel.textContent = 'Best streak';
+            
+            const bestValue = document.createElement('p');
+            bestValue.className = 'streak-value';
+            bestValue.textContent = habit.bestStreak + 'd';
+            
+            const bestStatus = document.createElement('div');
+            bestStatus.className = 'streak-status best';
+            
+            const bestText = document.createElement('span');
+            bestText.textContent = 'Best';
+            
+            const bestIcon = document.createElement('span');
+            bestIcon.textContent = '🏆';
+            
+            bestStatus.appendChild(bestText);
+            bestStatus.appendChild(bestIcon);
+            
+            bestStreakBox.appendChild(bestLabel);
+            bestStreakBox.appendChild(bestValue);
+            bestStreakBox.appendChild(bestStatus);
+            
+            content.appendChild(currentStreakBox);
+            content.appendChild(bestStreakBox);
+            card.appendChild(content);
+            
+            habitGrid.appendChild(card);
+        });
+        
+        document.getElementById('root').appendChild(habitGrid);
+    </script>
+</body>
+</html>
