@@ -110,7 +110,8 @@ st.title("🎯 Habit Streaks 2.0 (Beta)")
 st.caption("A new and improved habit tracker with modern visuals and reactive design")
 
 # Create a simple HTML component with custom CSS and vanilla JS
-html_content = """
+# Create template for HTML content
+html_template = """
 <html>
 <head>
     <style>
@@ -229,7 +230,7 @@ html_content = """
     
     <script type="text/javascript">
         // Get habits data from Streamlit
-        const habitsData = JSON.parse('%s');
+        const habitsData = HABITS_DATA_PLACEHOLDER;
         
         // Create the habit grid
         const habitGrid = document.createElement('div');
@@ -339,7 +340,10 @@ html_content = """
     </script>
 </body>
 </html>
-""" % json.dumps(habits_data)
+"""
+
+# Replace the placeholder with actual habits data
+html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habits_data))
 
 # Display the HTML component
 components.html(html_content, height=450, scrolling=False)
