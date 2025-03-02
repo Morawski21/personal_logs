@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 import pandas as pd
 import os
 import json
+import numpy as np
 
 import src.utils as utils
 import src.config as config
@@ -33,7 +34,7 @@ def calculate_current_streak(series):
     
     # For duration habits, convert to binary based on 20min threshold but preserve NaN
     if values.max() > 1:  # If we find values > 1, this is a duration-based habit
-        values = values.apply(lambda x: 1.0 if pd.notnull(x) and x >= 20 else 0.0)
+        values = values.apply(lambda x: 1.0 if pd.notnull(x) and x >= 20 else (0.0 if pd.notnull(x) else np.nan))
     
     # Convert to list for easier processing
     values = values.values
@@ -52,6 +53,8 @@ def calculate_current_streak(series):
     for idx in range(today_idx, -1, -1):
         if values[idx] >= 1:  # Success
             current_streak += 1
+        elif np.isnan(values[idx]):  # Skip NA values without breaking the streak
+            continue
         else:  # Break on explicit 0
             break
             
@@ -63,13 +66,13 @@ def calculate_longest_streak(series):
     values = series.copy()
     
     if values.max() > 1:
-        values = values.apply(lambda x: 1.0 if pd.notnull(x) and x >= 20 else (0.0 if pd.notnull(x) else pd.NA))
+        values = values.apply(lambda x: 1.0 if pd.notnull(x) and x >= 20 else (0.0 if pd.notnull(x) else np.nan))
     
     max_streak = 0
     current = 0
     
     for val in values:
-        if pd.isna(val):  # Skip NaN values
+        if pd.isna(val):  # Skip NaN values without breaking streak
             continue
         elif val >= 1:
             current += 1

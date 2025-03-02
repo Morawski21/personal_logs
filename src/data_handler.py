@@ -21,7 +21,16 @@ def load_logbook_data(filename: str = config.FILENAME):
     for path in data_paths:
         try:
             if os.path.exists(path):
+                # Explicitly set which values should be treated as NA
+                # Empty strings and spaces will be NA, but preserve actual NA values
                 df = pd.read_excel(path, keep_default_na=True, na_values=['', ' '])
+                
+                # Ensure numeric columns preserve actual NA values and don't convert them to 0
+                numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
+                for col in numeric_cols:
+                    # Convert empty strings that might have been missed to NaN
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+                
                 return df, path
             
         except Exception as e:
