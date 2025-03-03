@@ -146,8 +146,28 @@ except Exception as e:
     st.error(f"Error loading HTML template: {str(e)}")
     st.stop()
 
-# Replace the placeholder with actual habits data
-html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habits_data))
+# Replace the placeholder with actual habits data - ensure proper JSON formatting
+json_data = json.dumps(habits_data)
+
+# The JSON data needs to be directly usable as a JavaScript value
+# Instead of simple string replacement, we need to make it a proper JS object
+html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json_data)
+
+# Add additional debugging to help identify issues
+debug_script = """
+<script>
+console.log('Habits data loaded successfully');
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded');
+    // Check if the containers were created
+    setTimeout(function() {
+        console.log('Container count:', document.querySelectorAll('.habit-card').length);
+        console.log('Heatmap cells:', document.querySelectorAll('.day').length);
+    }, 500);
+});
+</script>
+"""
+html_content = html_content.replace('</body>', f'{debug_script}</body>')
 
 # Add debug information (can be removed after fixing the issue)
 if st.checkbox("Show debug information"):
@@ -162,8 +182,8 @@ if st.checkbox("Show debug information"):
         binary_exists = f"{habit}_binary" in df.columns if habit in ROW2_HABITS else "N/A"
         st.write(f"Habit '{habit}' exists in df: {habit_exists}, Binary column exists: {binary_exists}")
 
-# Display the HTML component
-components.html(html_content, height=800, scrolling=False)
+# Display the HTML component with increased height
+components.html(html_content, height=1000, scrolling=True)
 
 # Add a warning if no data is being displayed
 if not habits_data or not any(len(habit.get('daysData', [])) > 0 for habit in habits_data):
