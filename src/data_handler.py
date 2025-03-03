@@ -10,8 +10,9 @@ def get_data_paths(filename: str = config.FILENAME):
     """Return possible data file paths."""
     return [
         os.path.join('data', filename),  # Local development path
-        
         os.path.join('/app/data', filename),  # Docker container path
+        os.path.join('Z:\\personal-logs\\data', filename),  # Network drive path
+        os.path.join('\\\\NAS\\personal-logs\\data', filename),  # Alternative network path
     ]
 
 def load_logbook_data(filename: str = config.FILENAME):
