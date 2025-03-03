@@ -86,42 +86,13 @@
         
         .heatmap.monthly {
             grid-template-columns: repeat(7, 1fr);
-            grid-auto-rows: 1fr;
+            grid-template-rows: repeat(5, 1fr);
         }
         
         .heatmap.yearly {
-            grid-template-columns: repeat(52, 1fr);
+            grid-template-columns: repeat(26, 1fr);
             grid-template-rows: repeat(7, 1fr);
             gap: 2px;
-        }
-        
-        .weekday-labels {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            margin-bottom: 4px;
-        }
-        
-        .weekday-label {
-            font-size: 9px;
-            color: #9ca3af;
-            text-align: center;
-            margin-bottom: 2px;
-            text-transform: uppercase;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
-        
-        .month-label {
-            font-size: 12px;
-            color: #e5e7eb;
-            margin-bottom: 8px;
-            text-align: center;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            background-color: rgba(31, 41, 55, 0.5);
-            padding: 4px 0;
-            border-radius: 4px;
-            margin-top: 5px;
         }
         
         .day {
@@ -133,13 +104,10 @@
         .day:hover {
             transform: scale(1.15);
             opacity: 0.9;
-            z-index: 10;
         }
         
         .completed {
             opacity: 1;
-            transform: scale(0.9);
-            animation: popIn 0.4s forwards;
         }
         
         .missed {
@@ -149,12 +117,6 @@
         
         .empty {
             background-color: transparent;
-        }
-        
-        @keyframes popIn {
-            0% { transform: scale(0.8); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
         }
         
         .day-label {
@@ -206,8 +168,7 @@
     <div id="root"></div>
     
     <script type="text/javascript">
-        // Streamlit will replace HABITS_DATA_PLACEHOLDER with a JSON string
-        // that represents the habits data
+        // Get habits data from Streamlit
         const habitsData = HABITS_DATA_PLACEHOLDER;
         
         // Function to initialize the app
@@ -321,121 +282,51 @@
         }
         
         function createWeeklyHeatmap(container, daysData, color) {
-            // Clear the container first
-            container.innerHTML = '';
-            
-            // Create weekday labels container once
-            if (!container.previousSibling || !container.previousSibling.classList || !container.previousSibling.classList.contains('weekday-labels')) {
-                const weekdayLabels = document.createElement('div');
-                weekdayLabels.className = 'weekday-labels';
-                
-                // Weekday names (start with Monday)
-                const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                
-                // Add weekday labels
-                dayNames.forEach(day => {
-                    const label = document.createElement('div');
-                    label.className = 'weekday-label';
-                    label.textContent = day;
-                    weekdayLabels.appendChild(label);
-                });
-                
-                // Add weekday labels before the heatmap
-                container.parentNode.insertBefore(weekdayLabels, container);
-            }
-            
             // Get last 7 days
-            const last7Days = daysData.slice(-7);
-            
-            // Organize days by weekday (Mon-Sun)
-            const daysByWeekday = Array(7).fill(null);
-            
-            // Sort data by day of week (0 = Monday, 6 = Sunday)
-            last7Days.forEach(day => {
-                const date = new Date(day.date);
-                let dayOfWeek = date.getDay() - 1; // Convert to 0-based (0 = Monday)
-                if (dayOfWeek < 0) dayOfWeek = 6; // Handle Sunday
-                daysByWeekday[dayOfWeek] = day;
-            });
-            
-            // Weekday names for tooltips
-            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const daysToShow = daysData.slice(-7);
             
             // Add day cells
-            daysByWeekday.forEach((day, index) => {
+            daysToShow.forEach((day, index) => {
                 const dayCell = document.createElement('div');
                 dayCell.className = 'day';
                 
-                if (day === null) {
-                    dayCell.className += ' empty';
+                if (day.completed) {
+                    dayCell.className += ' completed';
+                    dayCell.style.backgroundColor = color;
                 } else {
-                    if (day.completed) {
-                        dayCell.className += ' completed';
-                        dayCell.style.backgroundColor = color;
-                    } else {
-                        dayCell.className += ' missed';
-                    }
-                    
-                    // Format date as dd.mm
-                    const date = new Date(day.date);
-                    const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-                    
-                    // Add day label inside the cell
-                    const dayLabel = document.createElement('div');
-                    dayLabel.className = 'day-label';
-                    dayLabel.textContent = formattedDate;
-                    dayCell.appendChild(dayLabel);
-                    
-                    dayCell.title = `${dayNames[index]}, ${day.date}: ${day.completed ? 'Completed' : 'Not completed'}`;
+                    dayCell.className += ' missed';
                 }
+                
+                // Add day label (e.g., "Mon", "Tue", etc.)
+                const dayLabel = document.createElement('div');
+                dayLabel.className = 'day-label';
+                
+                // Get day name
+                const date = new Date(day.date);
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const dayName = dayNames[date.getDay()];
+                
+                dayCell.title = `${dayName}, ${day.date}: ${day.completed ? 'Completed' : 'Not completed'}`;
                 
                 container.appendChild(dayCell);
             });
+            
+            // If we have fewer than 7 days, fill in the gaps
+            const padding = 7 - daysToShow.length;
+            for (let i = 0; i < padding; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day empty';
+                container.appendChild(emptyCell);
+            }
         }
         
         function createMonthlyHeatmap(container, daysData, color) {
-            // Clear the container first
-            container.innerHTML = '';
-            
-            // Get current month and year
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                               'July', 'August', 'September', 'October', 'November', 'December'];
-            
-            // Add month label - check if it exists first
-            if (!container.previousSibling || !container.previousSibling.classList || !container.previousSibling.classList.contains('month-label')) {
-                const monthLabel = document.createElement('div');
-                monthLabel.className = 'month-label';
-                monthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-                container.parentNode.insertBefore(monthLabel, container);
-                
-                // Create weekday labels container
-                const weekdayLabels = document.createElement('div');
-                weekdayLabels.className = 'weekday-labels';
-                
-                // Weekday names (start with Monday)
-                const dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                
-                // Add weekday labels
-                dayNames.forEach(day => {
-                    const label = document.createElement('div');
-                    label.className = 'weekday-label';
-                    label.textContent = day;
-                    weekdayLabels.appendChild(label);
-                });
-                
-                // Add weekday labels before the heatmap
-                container.parentNode.insertBefore(weekdayLabels, container);
-            }
-            
             // Get days in current month
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
             
             // Get first day of month (0 = Sunday, 1 = Monday, etc.)
-            let firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay() - 1; // Adjust for Monday start
-            if (firstDayOfMonth < 0) firstDayOfMonth = 6; // Handle Sunday
+            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
             
             // Add empty cells for days before the first of the month
             for (let i = 0; i < firstDayOfMonth; i++) {
@@ -446,55 +337,36 @@
             
             // Add day cells for each day of the month
             for (let day = 1; day <= daysInMonth; day++) {
-                const dayDate = new Date(currentYear, currentMonth, day);
+                const dayDate = new Date(today.getFullYear(), today.getMonth(), day);
                 const dayCell = document.createElement('div');
                 dayCell.className = 'day';
                 
-                // Format date string to match the format in daysData
-                const dateStr = dayDate.toISOString().split('T')[0];
-                
-                // Find matching day in data
-                const dayData = daysData.find(d => d.date === dateStr);
+                // Find matching day in data or assume not completed if past today
+                const dayData = daysData.find(d => {
+                    const dDate = new Date(d.date);
+                    return dDate.getDate() === day && 
+                           dDate.getMonth() === today.getMonth() && 
+                           dDate.getFullYear() === today.getFullYear();
+                });
                 
                 if (dayData && dayData.completed) {
                     dayCell.className += ' completed';
                     dayCell.style.backgroundColor = color;
-                    
-                    // Add day number for completed days
-                    const dayLabel = document.createElement('div');
-                    dayLabel.className = 'day-label';
-                    dayLabel.textContent = day;
-                    dayCell.appendChild(dayLabel);
-                    
-                    dayCell.title = `${dateStr}: Completed`;
+                    dayCell.title = `${dayData.date}: Completed`;
                 } else if (dayDate <= today) {
                     dayCell.className += ' missed';
-                    
-                    // Add day number for missed days
-                    const dayLabel = document.createElement('div');
-                    dayLabel.className = 'day-label';
-                    dayLabel.textContent = day;
-                    dayCell.appendChild(dayLabel);
-                    
                     dayCell.title = dayData ? 
-                        `${dateStr}: Not completed` : 
-                        `${dateStr}: No data`;
+                        `${dayData.date}: Not completed` : 
+                        `${dayDate.toISOString().split('T')[0]}: No data`;
                 } else {
                     dayCell.className += ' empty';
-                    
-                    // Add day number for future days
-                    const dayLabel = document.createElement('div');
-                    dayLabel.className = 'day-label';
-                    dayLabel.textContent = day;
-                    dayCell.appendChild(dayLabel);
                 }
                 
                 container.appendChild(dayCell);
             }
             
             // Fill remaining grid cells to complete the grid
-            const rows = Math.ceil((firstDayOfMonth + daysInMonth) / 7);
-            const totalCells = rows * 7;
+            const totalCells = 7 * 5; // 5 weeks, 7 days per week
             const cellsCount = firstDayOfMonth + daysInMonth;
             const remainingCells = totalCells - cellsCount;
             
@@ -506,51 +378,19 @@
         }
         
         function createYearlyHeatmap(container, daysData, color) {
-            // Clear the container first
-            container.innerHTML = '';
+            // Get up to last 365 days of data
+            const daysToShow = daysData.slice(-365);
             
-            // Add simple year label
-            if (!container.previousSibling || !container.previousSibling.classList || !container.previousSibling.classList.contains('month-label')) {
-                const yearLabel = document.createElement('div');
-                yearLabel.className = 'month-label';
-                yearLabel.textContent = new Date().getFullYear().toString();
-                container.parentNode.insertBefore(yearLabel, container);
-            }
-            
-            // Keep it simple for now - display a simplified version
-            // Take only last 365 days of data
-            const last365Days = daysData.slice(-365);
-            
-            // Change the grid layout
-            container.style.display = 'grid';
-            container.style.gridTemplateColumns = 'repeat(52, 1fr)';
-            container.style.gridTemplateRows = 'repeat(7, 1fr)';
-            container.style.gap = '2px';
-            
-            // Create a cell for each day (52 weeks × 7 days)
-            const totalDays = 52 * 7;
-            const emptyCellsCount = totalDays - last365Days.length;
-            
-            // Fill with empty cells first (left side)
-            for (let i = 0; i < emptyCellsCount; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'day empty';
-                container.appendChild(emptyCell);
-            }
-            
-            // Then add cells with data (right side, most recent at the end)
-            last365Days.forEach((day, index) => {
+            // Create a mini-calendar layout with 26 weeks and 7 days per week
+            // This creates a compact yearly view
+            for (let i = 0; i < Math.min(daysToShow.length, 26 * 7); i++) {
+                const day = daysToShow[daysToShow.length - 1 - i]; // Reverse order to show most recent on the right
                 const dayCell = document.createElement('div');
                 dayCell.className = 'day';
                 
                 if (day.completed) {
                     dayCell.className += ' completed';
                     dayCell.style.backgroundColor = color;
-                    
-                    // Add animation delay based on position for a wave effect
-                    const delayMs = index * 2;
-                    dayCell.style.animationDelay = `${delayMs}ms`;
-                    
                     dayCell.title = `${day.date}: Completed`;
                 } else {
                     dayCell.className += ' missed';
@@ -558,7 +398,17 @@
                 }
                 
                 container.appendChild(dayCell);
-            });
+            }
+            
+            // Fill in any remaining cells to complete the grid
+            const totalCells = 26 * 7;
+            const remainingCells = totalCells - Math.min(daysToShow.length, totalCells);
+            
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day empty';
+                container.appendChild(emptyCell);
+            }
         }
         
         // Initialize the app

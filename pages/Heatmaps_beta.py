@@ -20,9 +20,6 @@ try:
     if 'Data' in df.columns:
         df = df.set_index('Data')
     
-    # Ensure index is formatted as dates
-    if df.index.dtype != 'datetime64[ns]':
-        st.warning("Data index is not in datetime format. Heatmaps may not display correctly.")
 except Exception as e:
     st.error(f"Error loading data: {str(e)}")
     st.stop()
@@ -59,19 +56,17 @@ def prepare_habit_data(habit, is_duration=False):
     else:
         habit_col = habit
     
-    # Make sure df has a date index for the heatmap
-    if df.index.dtype != 'datetime64[ns]':
-        # If we have a Data column and the index is not datetime
+    # Get dates from dataframe - ensure we have a datetime index
+    if df.index.dtype == 'datetime64[ns]':
+        # Index is datetime - format it properly for JS
+        dates = df.index.strftime('%Y-%m-%d').tolist()
+    else:
+        # If not a datetime index but we have Data column
         if 'Data' in df.columns:
-            # Use Data column for dates
             dates = df['Data'].dt.strftime('%Y-%m-%d').tolist()
         else:
-            # Otherwise use the index but warn
+            # Otherwise just convert index to string
             dates = df.index.astype(str).tolist()
-            st.warning(f"No datetime index found, using string conversion which may cause display issues.")
-    else:
-        # Index is already datetime, format it properly for JS
-        dates = df.index.strftime('%Y-%m-%d').tolist()
     
     # Get habit values and convert to completed/not completed
     values = df[habit_col].tolist()
@@ -125,11 +120,6 @@ for habit in ROW2_HABITS:
             st.warning(f"Skipping {habit} - column or binary column not found in data")
     except Exception as e:
         st.error(f"Error processing {habit}: {str(e)}")
-        
-# Ensure we have at least some data
-if not habits_data:
-    st.error("No habit data could be prepared for visualization. Please check your data source.")
-    st.stop()
 
 # Page header
 st.title("📊 Habit Heatmaps (Beta)")
@@ -146,30 +136,10 @@ except Exception as e:
     st.error(f"Error loading HTML template: {str(e)}")
     st.stop()
 
-# Replace the placeholder with actual habits data - ensure proper JSON formatting
-json_data = json.dumps(habits_data)
+# Replace the placeholder with actual habits data
+html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habits_data))
 
-# The JSON data needs to be directly usable as a JavaScript value
-# Instead of simple string replacement, we need to make it a proper JS object
-html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json_data)
-
-# Add additional debugging to help identify issues
-debug_script = """
-<script>
-console.log('Habits data loaded successfully');
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM fully loaded');
-    // Check if the containers were created
-    setTimeout(function() {
-        console.log('Container count:', document.querySelectorAll('.habit-card').length);
-        console.log('Heatmap cells:', document.querySelectorAll('.day').length);
-    }, 500);
-});
-</script>
-"""
-html_content = html_content.replace('</body>', f'{debug_script}</body>')
-
-# Add debug information (can be removed after fixing the issue)
+# Add debug information if needed
 if st.checkbox("Show debug information"):
     st.write("DataFrame columns:", df.columns.tolist())
     st.write("DataFrame index type:", df.index.dtype)
@@ -183,7 +153,7 @@ if st.checkbox("Show debug information"):
         st.write(f"Habit '{habit}' exists in df: {habit_exists}, Binary column exists: {binary_exists}")
 
 # Display the HTML component with increased height
-components.html(html_content, height=1000, scrolling=True)
+components.html(html_content, height=800, scrolling=False)
 
 # Add a warning if no data is being displayed
 if not habits_data or not any(len(habit.get('daysData', [])) > 0 for habit in habits_data):
