@@ -169,7 +169,7 @@ if st.checkbox("Show debug information"):
                 st.write(f"Sample values for {habit}:", sample)
 
 # Display the HTML component with increased height
-components.html(html_content, height=800, scrolling=False)
+components.html(html_content, height=1000, scrolling=False)
 
 # Add a warning if no data is being displayed
 if not habits_data or not any(len(habit.get('daysData', [])) > 0 for habit in habits_data):

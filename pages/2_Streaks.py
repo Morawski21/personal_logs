@@ -131,4 +131,4 @@ except Exception as e:
 html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habits_data))
 
 # Display the HTML component
-components.html(html_content, height=520, scrolling=False)
+components.html(html_content, height=400, scrolling=False)
