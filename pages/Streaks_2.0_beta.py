@@ -9,6 +9,8 @@ import src.utils as utils
 import src.config as config
 from src.data_handler import get_logbook_data
 
+
+
 # Set page config
 utils.set_custom_page_config("Streaks 2.0 (beta)")
 
@@ -120,7 +122,7 @@ template_path = os.path.join("assets", "habit-cards.html")
 
 # Read the template file
 try:
-    with open(template_path, "r") as file:
+    with open(template_path, "r", encoding="utf-8") as file:
         html_template = file.read()
 except Exception as e:
     st.error(f"Error loading HTML template: {str(e)}")

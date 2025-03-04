@@ -13,7 +13,7 @@ HABITS_CONFIG = {
     "20min clean": {"color": "#ff6b6b", "active": True, "emoji": "🧹", "type": "binary"},
     "YNAB": {"color": "#ffcc00", "active": True, "emoji": "💰", "type": "binary"},
     "Anki": {"color": "#00ccff", "active": True, "emoji": "🧠", "type": "binary"},
-    "Pamiętnik": {"color": "#ff66cc", "active": True, "emoji": "📔", "type": "binary"},
+    "Pamiętnik": {"color": "#ff66cc", "active": True, "emoji": "✒️", "type": "binary"},
     "Plan na jutro": {"color": "#66ff66", "active": True, "emoji": "📝", "type": "binary"},
     "No porn": {"color": "#ff0000", "active": False, "emoji": "🚫", "type": "binary"},
     "Gaming <1h": {"color": "#0000ff", "active": True, "emoji": "🎮", "type": "binary"},
