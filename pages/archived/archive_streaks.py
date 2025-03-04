@@ -1,18 +1,31 @@
+from datetime import datetime, timedelta
+
 import streamlit as st
-import streamlit.components.v1 as components
+import seaborn as sns
+import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
-import os
-import json
 import numpy as np
 
 import src.utils as utils
 import src.config as config
+
 from src.data_handler import get_logbook_data
 
+utils.set_custom_page_config("Habit Streaks")
 
-
-# Set page config
-utils.set_custom_page_config("Streaks 2.0 (beta)")
+# Add CSS to hide delta arrows
+st.write(
+    """
+    <style>
+    [data-testid="stMetricDelta"] svg {
+        display: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # Load data using shared functionality
 try:
@@ -29,6 +42,8 @@ HABITS = ROW1_HABITS + ROW2_HABITS
 # Convert duration habits to binary based on 20-minute threshold
 for habit in ROW2_HABITS:
     df[f'{habit}_binary'] = (df[habit] >= 20).astype(float)
+    # Replace the original column name in HABITS with the binary version
+    HABITS[HABITS.index(habit)] = f'{habit}_binary'
 
 def calculate_current_streak(series):
     """Calculate the current streak from a series of values."""
@@ -84,52 +99,56 @@ def calculate_longest_streak(series):
             
     return max_streak
 
-# Create data for habit cards
-habits_data = []
+# Create metrics for each habit
+st.header("🎯 Habit Streaks")
 
-# Process binary habits
-for habit in ROW1_HABITS:
+cols1 = st.columns(3)
+for idx, habit in enumerate(ROW1_HABITS):
     current_streak = calculate_current_streak(df[habit])
     longest_streak = calculate_longest_streak(df[habit])
-    habits_data.append({
-        "name": habit,
-        "emoji": config.HABITS_CONFIG[habit]['emoji'],
-        "currentStreak": current_streak,
-        "bestStreak": longest_streak
-    })
+    
+    with cols1[idx]:
+        with st.expander(f"{config.HABITS_CONFIG[habit]['emoji']} {habit}", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(
+                    label="Current streak", 
+                    value=f"{current_streak}d",
+                    delta="Record-breaking 💥" if current_streak >= longest_streak and current_streak > 0 
+                          else "Active 🔥" if current_streak > 0 else None,
+                    delta_color="normal" if current_streak >= longest_streak and current_streak > 0 
+                               else "normal"
+                )
+            with col2:
+                st.metric(
+                    label="Best streak",
+                    value=f"{longest_streak}d",
+                    delta="Best 🏆",
+                    delta_color="off"
+                )
 
-# Process duration habits
-for habit in ROW2_HABITS:
+cols2 = st.columns(3)
+for idx, habit in enumerate(ROW2_HABITS):
     binary_habit = f'{habit}_binary'
     current_streak = calculate_current_streak(df[binary_habit])
     longest_streak = calculate_longest_streak(df[binary_habit])
-    habits_data.append({
-        "name": habit,
-        "emoji": config.HABITS_CONFIG[habit]['emoji'],
-        "currentStreak": current_streak,
-        "bestStreak": longest_streak
-    })
-
-# Page header
-st.title("🎯 Habit Streaks 2.0 (Beta)")
-st.caption("A new and improved habit tracker with modern visuals and reactive design")
-
-# Load the HTML template from external file
-import os
-
-# Path to the HTML template file
-template_path = os.path.join("assets", "habit-cards.html")
-
-# Read the template file
-try:
-    with open(template_path, "r", encoding="utf-8") as file:
-        html_template = file.read()
-except Exception as e:
-    st.error(f"Error loading HTML template: {str(e)}")
-    st.stop()
-
-# Replace the placeholder with actual habits data
-html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habits_data))
-
-# Display the HTML component
-components.html(html_content, height=520, scrolling=False)
+    
+    with cols2[idx]:
+        with st.expander(f"{config.HABITS_CONFIG[habit]['emoji']} {habit}", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(
+                    label="Current streak", 
+                    value=f"{current_streak}d",
+                    delta="Record-breaking 💥" if current_streak >= longest_streak and current_streak > 0 
+                          else "Active 🔥" if current_streak > 0 else None,
+                    delta_color="normal" if current_streak >= longest_streak and current_streak > 0 
+                               else "normal"
+                )
+            with col2:
+                st.metric(
+                    label="Best streak",
+                    value=f"{longest_streak}d",
+                    delta="Best 🏆",
+                    delta_color="off"
+                )
