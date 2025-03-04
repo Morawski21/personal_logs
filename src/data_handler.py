@@ -35,16 +35,8 @@ def load_logbook_data(filename: str = config.FILENAME):
                     # First get column names to set up converters
                     columns = pd.read_excel(path, nrows=0).columns
                     
-                    # Define a converter function to handle "NA" strings properly
-                    def handle_na_values(x):
-                        if pd.isna(x):
-                            return None
-                        elif isinstance(x, str) and x.upper() == 'NA':
-                            return None
-                        return x
-                    
-                    # Create converters for all columns
-                    converters = {col: handle_na_values for col in columns}
+                    # Create converters for all columns to handle "NA" strings properly
+                    converters = {col: lambda x: None if pd.isna(x) or (isinstance(x, str) and x.upper() == 'NA') else x for col in columns}
                     
                     # Read from Excel with proper NA handling
                     excel_df = pd.read_excel(

@@ -12,13 +12,3 @@ def set_custom_page_config(title: str):
         layout="wide",
         page_icon="assets/icon.png"
     )
-
-def calculate_streak(df, column, min_value=1):
-    """Calculate the current streak for a given column."""
-    streak = 0
-    for value in df[column]:
-        if value >= min_value:
-            streak += 1
-        else:
-            break
-    return streak
