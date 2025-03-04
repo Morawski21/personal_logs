@@ -111,8 +111,7 @@ for habit in ROW2_HABITS:
     })
 
 # Page header
-st.title("🎯 Habit Streaks 2.0 (Beta)")
-st.caption("A new and improved habit tracker with modern visuals and reactive design")
+st.title("Habit Streaks",)
 
 # Load the HTML template from external file
 import os
