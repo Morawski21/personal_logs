@@ -91,6 +91,7 @@
             display: grid;
             gap: 2px;
             margin-top: 16px;
+            will-change: transform; /* Performance optimization */
         }
         
         .heatmap.weekly {
@@ -100,7 +101,9 @@
         
         .heatmap.monthly {
             grid-template-columns: repeat(7, 1fr);
-            grid-auto-rows: 30px;
+            grid-auto-rows: 32px;
+            gap: 5px;
+            margin: 10px 0;
         }
         
         .heatmap.yearly {
@@ -109,11 +112,15 @@
             grid-template-rows: repeat(7, 1fr);
             grid-auto-flow: dense;
             height: 70px;
+            contain: strict; /* Performance optimization */
         }
         
         .day {
-            border-radius: 2px;
+            border-radius: 3px;
             transition: transform 0.2s, opacity 0.3s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            contain: layout; /* Performance optimization */
+            transform: translateZ(0); /* Hardware acceleration */
         }
         
         .heatmap.weekly .day {
@@ -121,10 +128,21 @@
         }
         
         .heatmap.monthly .day {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
         }
         
+        .heatmap.monthly .day.future {
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 500;
+        }
+
         .heatmap.yearly .day {
             width: 8px;
             height: 8px;
@@ -145,15 +163,15 @@
             opacity: 0.4;
         }
         
-        .missing-data {
+        .na-data {
             background-color: #374151;
-            opacity: 0.4;
+            opacity: 0.7;
             background-image: repeating-linear-gradient(
                 45deg,
                 transparent,
-                transparent 5px,
-                rgba(255, 255, 255, 0.1) 5px,
-                rgba(255, 255, 255, 0.1) 10px
+                transparent 3px,
+                rgba(255, 255, 255, 0.2) 3px,
+                rgba(255, 255, 255, 0.2) 6px
             );
         }
         
@@ -163,7 +181,7 @@
         
         .future {
             background-color: #1e293b;
-            opacity: 0.2;
+            opacity: 0.35;
             border: 1px dashed #4b5563;
         }
         
@@ -188,6 +206,25 @@
             width: 12px;
             height: 12px;
             border-radius: 2px;
+        }
+
+        /* Day of week labels */
+        .monthly-calendar {
+            position: relative;
+        }
+        
+        .day-labels {
+            display: flex;
+            margin-bottom: 5px;
+            padding-left: 0;
+        }
+        
+        .day-label {
+            width: 32px;
+            font-size: 10px;
+            text-align: center;
+            color: #9ca3af;
+            margin-right: 5px;
         }
     </style>
 </head>
@@ -267,14 +304,14 @@
                 { color: '#374151', label: 'Not Completed', opacity: 0.4 },
                 { 
                     color: '#374151', 
-                    label: 'Missing Data', 
-                    opacity: 0.4,
+                    label: 'NA', 
+                    opacity: 0.7,
                     pattern: true
                 },
                 { 
                     color: '#1e293b', 
                     label: 'Future Date', 
-                    opacity: 0.2,
+                    opacity: 0.35,
                     border: true
                 }
             ];
@@ -292,7 +329,7 @@
                 }
                 
                 if (item.pattern) {
-                    colorBox.style.backgroundImage = 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255, 255, 255, 0.1) 3px, rgba(255, 255, 255, 0.1) 6px)';
+                    colorBox.style.backgroundImage = 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255, 255, 255, 0.2) 3px, rgba(255, 255, 255, 0.2) 6px)';
                 }
                 
                 if (item.border) {
@@ -363,22 +400,48 @@
             // Create heatmap based on view type
             let counterText = '';
             
-            const heatmap = document.createElement('div');
-            heatmap.className = `heatmap ${viewType}`;
-            
-            switch(viewType) {
-                case 'weekly':
-                    counterText = createWeeklyHeatmap(heatmap, habit.daysData || [], habit.color);
-                    break;
-                case 'monthly':
-                    counterText = createMonthlyHeatmap(heatmap, habit.daysData || [], habit.color);
-                    break;
-                case 'yearly':
-                    counterText = createYearlyHeatmap(heatmap, habit.daysData || [], habit.color);
-                    break;
+            if (viewType === 'monthly') {
+                // For monthly view, create a calendar-like container
+                const calendarContainer = document.createElement('div');
+                calendarContainer.className = 'monthly-calendar';
+                
+                // Add day of week labels
+                const dayLabels = document.createElement('div');
+                dayLabels.className = 'day-labels';
+                
+                const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                days.forEach(day => {
+                    const label = document.createElement('div');
+                    label.className = 'day-label';
+                    label.textContent = day;
+                    dayLabels.appendChild(label);
+                });
+                
+                calendarContainer.appendChild(dayLabels);
+                
+                // Create the actual heatmap
+                const heatmap = document.createElement('div');
+                heatmap.className = `heatmap ${viewType}`;
+                counterText = createMonthlyHeatmap(heatmap, habit.daysData || [], habit.color);
+                calendarContainer.appendChild(heatmap);
+                
+                card.appendChild(calendarContainer);
+            } else {
+                // For other views, create standard heatmap
+                const heatmap = document.createElement('div');
+                heatmap.className = `heatmap ${viewType}`;
+                
+                switch(viewType) {
+                    case 'weekly':
+                        counterText = createWeeklyHeatmap(heatmap, habit.daysData || [], habit.color);
+                        break;
+                    case 'yearly':
+                        counterText = createYearlyHeatmap(heatmap, habit.daysData || [], habit.color);
+                        break;
+                }
+                
+                card.appendChild(heatmap);
             }
-            
-            card.appendChild(heatmap);
             
             // Add counter display
             const counter = document.createElement('div');
@@ -406,7 +469,7 @@
                 } else if (day.completed === false) {
                     dayCell.className += ' missed';
                 } else {
-                    dayCell.className += ' missing-data';
+                    dayCell.className += ' na-data';
                 }
                 
                 // Get day name
@@ -414,7 +477,7 @@
                 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 const dayName = dayNames[date.getDay()];
                 
-                dayCell.title = `${dayName}, ${day.date}: ${day.completed ? 'Completed' : 'Not completed'}`;
+                dayCell.title = `${dayName}, ${day.date}: ${day.completed ? 'Completed' : day.completed === false ? 'Not completed' : 'NA'}`;
                 
                 container.appendChild(dayCell);
             });
@@ -457,6 +520,9 @@
                 const dayCell = document.createElement('div');
                 dayCell.className = 'day';
                 
+                // Add day number to cell
+                dayCell.textContent = day;
+                
                 // Format date as YYYY-MM-DD
                 const formattedDate = dayDate.toISOString().split('T')[0];
                 
@@ -477,9 +543,12 @@
                     if (dayData && dayData.completed === false) {
                         dayCell.className += ' missed';
                         dayCell.title = `${formattedDate}: Not completed`;
+                    } else if (dayData && dayData.completed === null) {
+                        dayCell.className += ' na-data';
+                        dayCell.title = `${formattedDate}: NA`;
                     } else {
-                        dayCell.className += ' missing-data';
-                        dayCell.title = `${formattedDate}: No data`;
+                        dayCell.className += ' na-data';
+                        dayCell.title = `${formattedDate}: NA`;
                     }
                 } else {
                     dayCell.className += ' future';
@@ -530,6 +599,7 @@
             // Create a set for optimization (faster lookups)
             const completedDays = new Set();
             const missedDays = new Set();
+            const naDays = new Set();
             
             // Preprocess data for faster lookup
             daysData.forEach(day => {
@@ -540,11 +610,42 @@
                 } else if (day.completed === false) {
                     missedDays.add(dateStr);
                     missedCount++;
+                } else if (day.completed === null) {
+                    naDays.add(dateStr);
                 }
             });
             
+            // For performance, create a document fragment to batch DOM operations
+            const fragment = document.createDocumentFragment();
+            
+            // Create a single month indicator
+            const monthLabels = [];
+            let currentMonth = -1;
+            
+            // Optimize by pre-creating a pool of cells with different styles
+            const cellStyles = {
+                completed: document.createElement('div'),
+                missed: document.createElement('div'),
+                na: document.createElement('div'),
+                future: document.createElement('div')
+            };
+            
+            cellStyles.completed.className = 'day completed';
+            cellStyles.missed.className = 'day missed';
+            cellStyles.na.className = 'day na-data';
+            cellStyles.future.className = 'day future';
+            
             // Add cells for each day until end of year
             while (currentDate <= endOfYear) {
+                // Check if we entered a new month for month labels
+                if (currentDate.getMonth() !== currentMonth) {
+                    currentMonth = currentDate.getMonth();
+                    monthLabels.push({
+                        month: currentMonth,
+                        week: currentWeek
+                    });
+                }
+                
                 // Get day of week (0 = Sunday, 1 = Monday, etc.)
                 const dayOfWeek = currentDate.getDay();
                 // Convert to Monday-first (0 = Monday, 6 = Sunday)
@@ -553,29 +654,37 @@
                 // Format date as YYYY-MM-DD
                 const dateStr = currentDate.toISOString().split('T')[0];
                 
-                // Create the day cell
-                const dayCell = document.createElement('div');
-                dayCell.className = 'day';
+                // Create the day cell - clone from template for better performance
+                let dayCell;
+                let title;
+                
+                if (completedDays.has(dateStr)) {
+                    dayCell = cellStyles.completed.cloneNode(false);
+                    dayCell.style.backgroundColor = color;
+                    title = `${dateStr}: Completed`;
+                } else if (missedDays.has(dateStr)) {
+                    dayCell = cellStyles.missed.cloneNode(false);
+                    title = `${dateStr}: Not completed`;
+                } else if (naDays.has(dateStr)) {
+                    dayCell = cellStyles.na.cloneNode(false);
+                    title = `${dateStr}: NA`;
+                } else if (currentDate <= today) {
+                    dayCell = cellStyles.na.cloneNode(false);
+                    title = `${dateStr}: NA`;
+                } else {
+                    dayCell = cellStyles.future.cloneNode(false);
+                    title = `${dateStr}: Future date`;
+                }
+                
+                // Position the cell
                 dayCell.style.gridColumn = currentWeek + 1; // 1-based
                 dayCell.style.gridRow = adjustedDayOfWeek + 1; // 1-based
                 
-                // Set appearance based on day state
-                if (completedDays.has(dateStr)) {
-                    dayCell.className += ' completed';
-                    dayCell.style.backgroundColor = color;
-                } else if (missedDays.has(dateStr)) {
-                    dayCell.className += ' missed';
-                } else if (currentDate <= today) {
-                    dayCell.className += ' missing-data';
-                } else {
-                    dayCell.className += ' future';
-                }
+                // Using data attributes for lazy tooltip loading
+                dayCell.dataset.title = title;
                 
-                // Set tooltip
-                dayCell.title = dateStr;
-                
-                // Add to container
-                container.appendChild(dayCell);
+                // Add to fragment instead of container directly
+                fragment.appendChild(dayCell);
                 
                 // Move to next day
                 currentDate.setDate(currentDate.getDate() + 1);
@@ -585,6 +694,17 @@
                     currentWeek++;
                 }
             }
+            
+            // Use event delegation for tooltips to improve performance
+            container.addEventListener('mouseover', function(e) {
+                const target = e.target;
+                if (target.classList.contains('day') && target.dataset.title && !target.title) {
+                    target.title = target.dataset.title;
+                }
+            }, { passive: true });
+            
+            // Single DOM update for better performance
+            container.appendChild(fragment);
             
             // Calculate percentage
             const totalDays = completedCount + missedCount;

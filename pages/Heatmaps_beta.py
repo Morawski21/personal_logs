@@ -44,10 +44,16 @@ if missing_habits:
     ROW2_HABITS = [h for h in ROW2_HABITS if h not in missing_habits]
     HABITS = ROW1_HABITS + ROW2_HABITS
 
-# Convert duration habits to binary based on 20-minute threshold
+# Convert duration habits to binary based on 20-minute threshold while preserving NA values
 for habit in ROW2_HABITS:
     if habit in df.columns:  # Only process if column exists
-        df[f'{habit}_binary'] = (df[habit] >= 20).astype(float)
+        # Create a new binary column that properly handles NA values
+        df[f'{habit}_binary'] = pd.Series([
+            1.0 if not pd.isna(value) and value >= 20 else 
+            0.0 if not pd.isna(value) and value < 20 else 
+            None  # Keep NA values as None
+            for value in df[habit]
+        ], index=df.index)
 
 def prepare_habit_data(habit, is_duration=False):
     """Prepare habit data for heatmap visualization."""
@@ -74,15 +80,16 @@ def prepare_habit_data(habit, is_duration=False):
     # Create days data array
     days_data = []
     for i, date in enumerate(dates):
-        # Skip NaN values by treating them as not completed
-        if pd.isna(values[i]):
-            completed = False
+        # Check for NaN, NA strings, or any indication of not applicable
+        if pd.isna(values[i]) or (isinstance(values[i], str) and values[i].upper() == 'NA'):
+            # Use null to indicate NA in JavaScript
+            completed = None
         elif is_duration:
-            # For duration habits, consider >= 20 as completed
-            completed = values[i] >= 1
+            # For duration habits, consider binary value (which is already properly processed)
+            completed = bool(values[i] >= 1)
         else:
             # For binary habits, any non-zero value is completed
-            completed = values[i] >= 1
+            completed = bool(values[i] >= 1)
         
         days_data.append({
             "date": date,
@@ -151,6 +158,15 @@ if st.checkbox("Show debug information"):
         habit_exists = habit in df.columns
         binary_exists = f"{habit}_binary" in df.columns if habit in ROW2_HABITS else "N/A"
         st.write(f"Habit '{habit}' exists in df: {habit_exists}, Binary column exists: {binary_exists}")
+        
+        # Show sample values for debugging
+        if habit in df.columns:
+            if habit in ROW2_HABITS and f"{habit}_binary" in df.columns:
+                sample = pd.DataFrame({
+                    'original': df[habit].head(5),
+                    'binary': df[f'{habit}_binary'].head(5)
+                })
+                st.write(f"Sample values for {habit}:", sample)
 
 # Display the HTML component with increased height
 components.html(html_content, height=800, scrolling=False)

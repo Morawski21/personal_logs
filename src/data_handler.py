@@ -31,8 +31,28 @@ def load_logbook_data(filename: str = config.FILENAME):
                 # If Excel is newer or CSV doesn't exist, convert Excel to CSV
                 if excel_modified > csv_modified or not os.path.exists(csv_path):
                     print(f"Converting Excel to CSV: {path} -> {csv_path}")
-                    # Read from Excel with NA handling
-                    excel_df = pd.read_excel(path, keep_default_na=True, na_values=['', ' '])
+                    
+                    # First get column names to set up converters
+                    columns = pd.read_excel(path, nrows=0).columns
+                    
+                    # Define a converter function to handle "NA" strings properly
+                    def handle_na_values(x):
+                        if pd.isna(x):
+                            return None
+                        elif isinstance(x, str) and x.upper() == 'NA':
+                            return None
+                        return x
+                    
+                    # Create converters for all columns
+                    converters = {col: handle_na_values for col in columns}
+                    
+                    # Read from Excel with proper NA handling
+                    excel_df = pd.read_excel(
+                        path, 
+                        keep_default_na=True, 
+                        na_values=['', ' '],
+                        converters=converters
+                    )
                     
                     # Ensure numeric columns preserve actual NA values
                     numeric_cols = excel_df.select_dtypes(include=['float64', 'int64']).columns
@@ -43,7 +63,7 @@ def load_logbook_data(filename: str = config.FILENAME):
                     excel_df.to_csv(csv_path, index=False)
                 
                 # Read from CSV with consistent NA handling
-                df = pd.read_csv(csv_path, keep_default_na=True, na_values=['', ' '])
+                df = pd.read_csv(csv_path, keep_default_na=True, na_values=['', ' ', 'NA', 'na'])
                 
                 # Apply the same numeric handling as with Excel
                 numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
