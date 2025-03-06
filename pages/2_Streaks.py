@@ -130,5 +130,5 @@ except Exception as e:
 # Replace the placeholder with actual habits data
 html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habits_data))
 
-# Display the HTML component
-components.html(html_content, height=400, scrolling=False)
+# Display the HTML component with increased height to accommodate milestone indicators
+components.html(html_content, height=420, scrolling=False)

@@ -14,13 +14,60 @@
             border-radius: 12px;
             padding: 20px;
             color: white;
-            margin-bottom: 16px;
+            margin-bottom: 24px; /* Increased to make room for milestone indicators */
             position: relative;
-            overflow: hidden;
+            overflow: visible; /* Changed from hidden to make milestone indicators visible */
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             height: 160px;
             box-sizing: border-box;
             z-index: 1;
+        }
+        
+        .milestone-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 12px;
+            position: absolute;
+            right: -8px;
+            top: 25px;
+            height: 75%;
+            text-align: center;
+            z-index: 2;
+        }
+        
+        .milestone {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #374151;
+            border: 2px solid #111827;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .milestone.active {
+            background-color: #4ade80;
+        }
+        
+        .milestone.week {
+            background-color: #4ade80;
+            box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+        }
+        
+        .milestone.month {
+            background-color: #3b82f6;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+        }
+        
+        .milestone.month-2 {
+            background-color: #a855f7;
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+        }
+        
+        .milestone.month-3 {
+            background-color: #ec4899;
+            box-shadow: 0 0 8px rgba(236, 72, 153, 0.6);
         }
         
         .grid-container {
@@ -134,6 +181,33 @@
             animation: moveGradient 6s ease-in-out infinite;
         }
         
+        /* Enhanced gradient backgrounds for higher streaks */
+        .record-background.tier-2 {
+            background: radial-gradient(
+                circle at center,
+                rgb(24, 190, 110) 0%,
+                rgb(198, 31, 198) 35%,
+                rgb(255, 213, 0) 70%,
+                transparent 100%
+            );
+            opacity: 0.3;
+            animation: moveGradient 6s ease-in-out infinite;
+            background-size: 250% 250%;
+        }
+        
+        .record-background.tier-3 {
+            background: radial-gradient(
+                circle at center,
+                rgb(220, 38, 38) 50%,
+                rgb(184, 85, 4) 35%,
+                rgb(252, 211, 77) 50%,
+                transparent 100%
+            );
+            opacity: 0.3;
+            animation: moveGradient 4s ease-in-out infinite;
+            background-size: 300% 300%;
+        }
+        
         @keyframes moveGradient {
             0% {
                 background-position: 0% 0%;
@@ -171,6 +245,13 @@
             if (isRecordBreaking) {
                 background = document.createElement('div');
                 background.className = 'record-background';
+                
+                // Add tiered background colors based on streak length
+                if (habit.currentStreak >= 60) {
+                    background.classList.add('tier-3');
+                } else if (habit.currentStreak >= 30) {
+                    background.classList.add('tier-2');
+                }
             } else if (isActive) {
                 background = document.createElement('div');
                 background.className = 'active-background';
@@ -268,6 +349,36 @@
             content.appendChild(bestStreakBox);
             card.appendChild(content);
             
+            // Add milestone indicators
+            const milestoneContainer = document.createElement('div');
+            milestoneContainer.className = 'milestone-container';
+            
+            // Define milestone thresholds
+            const milestones = [
+                { days: 7, class: 'week' },       // 1 week
+                { days: 30, class: 'month' },     // 1 month
+                { days: 60, class: 'month-2' },   // 2 months
+                { days: 90, class: 'month-3' }    // 3 months
+            ];
+            
+            // Create milestone indicators
+            milestones.forEach(milestone => {
+                const indicator = document.createElement('div');
+                indicator.className = 'milestone';
+                
+                // Add tooltip with days information
+                indicator.title = `${milestone.days} days`;
+                
+                // Check if current streak reaches this milestone
+                if (habit.currentStreak >= milestone.days) {
+                    indicator.classList.add('active');
+                    indicator.classList.add(milestone.class);
+                }
+                
+                milestoneContainer.appendChild(indicator);
+            });
+            
+            card.appendChild(milestoneContainer);
             habitGrid.appendChild(card);
         });
         
