@@ -29,6 +29,8 @@
             gap: 20px;
             padding: 16px;
             margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .card-header {
@@ -132,6 +134,19 @@
             );
             background-size: 200% 200%;
             animation: moveGradient 6s ease-in-out infinite;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .grid-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
         }
         
         @keyframes moveGradient {
