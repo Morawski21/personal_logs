@@ -31,6 +31,77 @@
             margin-bottom: 20px;
         }
         
+        .perfect-day-container {
+            position: relative;
+            padding: 6px;
+            margin-bottom: 5px;
+            border-radius: 18px;
+        }
+        
+        .perfect-day-frame {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            border-radius: 18px;
+            z-index: 0;
+            pointer-events: none;
+            border: 4px solid;
+            border-image-slice: 1;
+            border-image-source: linear-gradient(90deg, 
+                rgb(253, 29, 141) 0%,
+                rgb(147, 51, 234) 33%,
+                rgb(55, 252, 225) 66%,
+                rgb(253, 29, 141) 100%
+            );
+            background-size: 300% 100%;
+            animation: moveBorder 6s linear infinite;
+        }
+        
+        @keyframes moveBorder {
+            0% {
+                border-image-source: linear-gradient(90deg, 
+                    rgb(253, 29, 141) 0%,
+                    rgb(147, 51, 234) 33%,
+                    rgb(55, 252, 225) 66%,
+                    rgb(253, 29, 141) 100%
+                );
+            }
+            25% {
+                border-image-source: linear-gradient(90deg, 
+                    rgb(147, 51, 234) 0%,
+                    rgb(55, 252, 225) 33%,
+                    rgb(253, 29, 141) 66%,
+                    rgb(147, 51, 234) 100%
+                );
+            }
+            50% {
+                border-image-source: linear-gradient(90deg, 
+                    rgb(55, 252, 225) 0%,
+                    rgb(253, 29, 141) 33%,
+                    rgb(147, 51, 234) 66%,
+                    rgb(55, 252, 225) 100%
+                );
+            }
+            75% {
+                border-image-source: linear-gradient(90deg, 
+                    rgb(253, 29, 141) 33%,
+                    rgb(147, 51, 234) 66%,
+                    rgb(55, 252, 225) 100%,
+                    rgb(253, 29, 141) 0%
+                );
+            }
+            100% {
+                border-image-source: linear-gradient(90deg, 
+                    rgb(253, 29, 141) 0%,
+                    rgb(147, 51, 234) 33%,
+                    rgb(55, 252, 225) 66%,
+                    rgb(253, 29, 141) 100%
+                );
+            }
+        }
+        
         .card-header {
             display: flex;
             align-items: center;
@@ -98,6 +169,23 @@
             color: #9ca3af;
         }
         
+        .perfect-day-message {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #c084fc;
+            line-height: 1.4;
+        }
+        
+        .perfect-day-submessage {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #9ca3af;
+            font-style: italic;
+        }
+        
         .active-background {
             position: absolute;
             top: 0;
@@ -154,9 +242,34 @@
         // Get habits data from Streamlit
         const habitsData = HABITS_DATA_PLACEHOLDER;
         
+        // Create the root container
+        const rootElement = document.getElementById('root');
+        
         // Create the habit grid
         const habitGrid = document.createElement('div');
         habitGrid.className = 'grid-container';
+        
+        // Check if all 6 habits are active (perfect day)
+        const activeTodayCount = habitsData.filter(habit => habit.currentStreak > 0).length;
+        const isPerfectDay = activeTodayCount === 6;
+        
+        // Create container for the grid (for perfect day frame)
+        let containerElement;
+        if (isPerfectDay) {
+            containerElement = document.createElement('div');
+            containerElement.className = 'perfect-day-container';
+            
+            const frameElement = document.createElement('div');
+            frameElement.className = 'perfect-day-frame';
+            containerElement.appendChild(frameElement);
+            rootElement.appendChild(containerElement);
+            
+            // Add the habit grid inside the container
+            containerElement.appendChild(habitGrid);
+        } else {
+            // If not a perfect day, add the grid directly to root
+            rootElement.appendChild(habitGrid);
+        }
         
         // Create each habit card
         habitsData.forEach(habit => {
@@ -271,7 +384,18 @@
             habitGrid.appendChild(card);
         });
         
-        document.getElementById('root').appendChild(habitGrid);
+        // Add a celebratory message for perfect days
+        if (isPerfectDay) {
+            const celebrationMsg = document.createElement('div');
+            celebrationMsg.className = 'perfect-day-message';
+            celebrationMsg.innerHTML = '<i class="fa-solid fa-medal"></i> Perfect Day! <i class="fa-solid fa-medal"></i>';
+            rootElement.appendChild(celebrationMsg);
+            
+            const subMessage = document.createElement('div');
+            subMessage.className = 'perfect-day-submessage';
+            subMessage.textContent = 'All habits completed. Rest & conquer the next day.';
+            rootElement.appendChild(subMessage);
+        }
     </script>
 </body>
 </html>
