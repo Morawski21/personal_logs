@@ -1,0 +1,193 @@
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .analytics-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .analytics-card {
+            background-color: #111827;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            height: 160px;
+            box-sizing: border-box;
+            z-index: 1;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .analytics-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .metric-title {
+            font-size: 16px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+            margin-top: 0;
+        }
+        
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            color: white;
+        }
+        
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .positive-change {
+            color: #4ade80;
+        }
+        
+        .negative-change {
+            color: #f87171;
+        }
+        
+        .neutral-change {
+            color: #9ca3af;
+        }
+        
+        .card-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            opacity: 0.6;
+        }
+        
+        .time-period {
+            font-size: 14px;
+            color: #9ca3af;
+            text-align: center;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/javascript">
+        // Get metrics data from Streamlit
+        const metricsData = METRICS_DATA_PLACEHOLDER;
+        
+        // Function to format values
+        function formatValue(value, type) {
+            if (type === 'time') {
+                return value.toFixed(0);
+            } else if (type === 'hours') {
+                return value.toFixed(1);
+            }
+            return value.toFixed(1);
+        }
+        
+        // Function to determine change class and icon
+        function getChangeInfo(change) {
+            if (change > 0) {
+                return {
+                    class: 'positive-change',
+                    icon: 'fa-solid fa-arrow-up'
+                };
+            } else if (change < 0) {
+                return {
+                    class: 'negative-change',
+                    icon: 'fa-solid fa-arrow-down'
+                };
+            } else {
+                return {
+                    class: 'neutral-change',
+                    icon: 'fa-solid fa-minus'
+                };
+            }
+        }
+        
+        // Create the root container
+        const rootElement = document.getElementById('root');
+        
+        // Create the metrics container
+        const metricsContainer = document.createElement('div');
+        metricsContainer.className = 'analytics-container';
+        rootElement.appendChild(metricsContainer);
+        
+        // Icons for each metric
+        const metricIcons = {
+            'avg_daily': 'fa-solid fa-calendar-day',
+            'most_productive_day': 'fa-solid fa-trophy',
+            'total_hours': 'fa-solid fa-hourglass'
+        };
+        
+        // Create each metric card
+        metricsData.forEach((metric, index) => {
+            const card = document.createElement('div');
+            card.className = 'analytics-card';
+            
+            // Create icon
+            const icon = document.createElement('div');
+            icon.className = 'card-icon';
+            const iconElement = document.createElement('i');
+            iconElement.className = metricIcons[metric.id] || 'fa-solid fa-chart-line';
+            icon.appendChild(iconElement);
+            card.appendChild(icon);
+            
+            // Create title
+            const title = document.createElement('p');
+            title.className = 'metric-title';
+            title.textContent = metric.title;
+            card.appendChild(title);
+            
+            // Create value
+            const value = document.createElement('p');
+            value.className = 'metric-value';
+            value.textContent = formatValue(metric.value, metric.format) + (metric.unit ? ' ' + metric.unit : '');
+            card.appendChild(value);
+            
+            // Create change indicator
+            const changeInfo = getChangeInfo(metric.change);
+            const change = document.createElement('div');
+            change.className = `metric-change ${changeInfo.class}`;
+            
+            const changeText = document.createElement('span');
+            changeText.textContent = (metric.change > 0 ? '+' : '') + metric.change.toFixed(1) + '%';
+            
+            const changeIcon = document.createElement('i');
+            changeIcon.className = changeInfo.icon;
+            
+            change.appendChild(changeText);
+            change.appendChild(changeIcon);
+            card.appendChild(change);
+            
+            metricsContainer.appendChild(card);
+        });
+        
+        // Add period description text
+        const periodText = document.createElement('div');
+        periodText.className = 'time-period';
+        periodText.textContent = `Last ${metricsData[0].days} valid days (excluding NA days)`;
+        rootElement.appendChild(periodText);
+    </script>
+</body>
+</html>

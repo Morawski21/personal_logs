@@ -1,9 +1,11 @@
 import datetime as dt
-
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
+import json
+import os
 
 import src.utils as utils
 import src.config as config
@@ -24,62 +26,117 @@ except Exception as e:
     st.error(f"Error loading data: {str(e)}")
     st.stop()
 
-# Filter data for the last 7 days and the previous 7 days
-df_last_7_days = analytics.filter_date_range(df, delta_days=7)
-df_previous_7_days = analytics.filter_date_range(df, today, delta_days=7, offset_days=7)
+# Get the last 7 valid days and the previous 7 valid days
+df_last_7_valid_days = analytics.get_last_n_valid_days(df, 7)
+latest_date = df_last_7_valid_days['Data'].max()
+
+# Get previous 7 valid days before the earliest date in the current period
+earliest_date_current = df_last_7_valid_days['Data'].min()
+df_previous = df[df['Data'] < earliest_date_current]
+df_previous_7_valid_days = analytics.get_last_n_valid_days(df_previous, 7)
+
+# Get active fields
+active_fields = config.get_active_fields()
+time_columns = [field for field in active_fields if field not in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h", "sport", "accessories", "suplementy"]]
+# Ensure "Inne" is at the beginning of the list
+if "Inne" in time_columns:
+    time_columns.remove("Inne")
+    time_columns.insert(0, "Inne")
+
+# Filter dataframe to include only active fields
+df_last_7_valid_days = df_last_7_valid_days[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
+df_previous_7_valid_days = df_previous_7_valid_days[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
 
 # Main metrics
 with st.expander("📊 Weekly Stats Comparison", expanded=True):
-    st.caption("Comparing last 7 days with previous week")
-    col1, col2, col3 = st.columns(3)
-
-    active_fields = config.get_active_fields()
-    time_columns = [field for field in active_fields if field not in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h", "sport", "accessories", "suplementy"]]
-    # Ensure "Inne" is at the beginning of the list
-    if "Inne" in time_columns:
-        time_columns.remove("Inne")
-        time_columns.insert(0, "Inne")
-
-    # Filter dataframe to include only active fields
-    df_last_7_days = df_last_7_days[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
-    df_previous_7_days = df_previous_7_days[list(active_fields.keys()) + ['Data', 'WEEKDAY', 'Razem']]
-
+    st.caption("Comparing last 7 valid days with previous period")
+    
     try:
-        if df_last_7_days.empty:
-            raise ValueError("No data available for the current week")
+        if df_last_7_valid_days.empty:
+            raise ValueError("No data available for the current period")
 
         # Calculate metrics for the current period
-        avg_total = df_last_7_days['Razem'].mean()
-        most_productive_day = df_last_7_days.loc[df_last_7_days['Razem'].idxmax()]
-        total_productive_hours = df_last_7_days['Razem'].sum() / 60
+        avg_total = df_last_7_valid_days['Razem'].mean()
+        most_productive_day = df_last_7_valid_days.loc[df_last_7_valid_days['Razem'].idxmax()]
+        total_productive_hours = df_last_7_valid_days['Razem'].sum() / 60
 
         # Calculate metrics for the previous period
-        avg_total_prev = df_previous_7_days['Razem'].mean() if not df_previous_7_days.empty else 0
-        most_productive_day_prev = df_previous_7_days['Razem'].max() if not df_previous_7_days.empty else 0
-        total_productive_hours_prev = df_previous_7_days['Razem'].sum() / 60 if not df_previous_7_days.empty else 0
+        avg_total_prev = df_previous_7_valid_days['Razem'].mean() if not df_previous_7_valid_days.empty else 0
+        most_productive_day_prev = df_previous_7_valid_days['Razem'].max() if not df_previous_7_valid_days.empty else 0
+        total_productive_hours_prev = df_previous_7_valid_days['Razem'].sum() / 60 if not df_previous_7_valid_days.empty else 0
 
         # Calculate percentage changes
         avg_total_change = ((avg_total - avg_total_prev) / avg_total_prev * 100) if avg_total_prev != 0 else 0
         most_productive_day_change = ((most_productive_day['Razem'] - most_productive_day_prev) / most_productive_day_prev * 100) if most_productive_day_prev != 0 else 0
         total_productive_hours_change = ((total_productive_hours - total_productive_hours_prev) / total_productive_hours_prev * 100) if total_productive_hours_prev != 0 else 0
 
-        with col1:
-            st.metric("Average Daily Total (min)", 
-                     f"{avg_total:.0f}", 
-                     f"{avg_total_change:.1f}%")
+        # Prepare data for the HTML component
+        metrics_data = [
+            {
+                "id": "avg_daily",
+                "title": "Average Daily Total",
+                "value": avg_total,
+                "change": avg_total_change,
+                "unit": "min",
+                "format": "time",
+                "days": 7
+            },
+            {
+                "id": "most_productive_day",
+                "title": "Most Productive Day",
+                "value": most_productive_day['Razem'],
+                "change": most_productive_day_change,
+                "unit": "min",
+                "format": "time",
+                "days": 7
+            },
+            {
+                "id": "total_hours",
+                "title": "Total Productive Hours",
+                "value": total_productive_hours,
+                "change": total_productive_hours_change,
+                "unit": "hrs",
+                "format": "hours",
+                "days": 7
+            }
+        ]
+        
+        # Load the HTML template
+        template_path = os.path.join("assets", "analytics-cards.html")
+        
+        try:
+            with open(template_path, "r", encoding="utf-8") as file:
+                html_template = file.read()
+                
+            # Replace the placeholder with actual metrics data
+            html_content = html_template.replace('METRICS_DATA_PLACEHOLDER', json.dumps(metrics_data))
+            
+            # Display the HTML component
+            components.html(html_content, height=240, scrolling=False)
+            
+        except Exception as e:
+            st.error(f"Error loading HTML template: {str(e)}")
+            
+            # Fallback to standard Streamlit metrics
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Average Daily Total (min)", 
+                         f"{avg_total:.0f}", 
+                         f"{avg_total_change:.1f}%")
 
-        with col2:
-            st.metric("Most Productive Day (min)", 
-                     f"{most_productive_day['Razem']:.0f}", 
-                     f"{most_productive_day_change:.1f}%")
+            with col2:
+                st.metric("Most Productive Day (min)", 
+                         f"{most_productive_day['Razem']:.0f}", 
+                         f"{most_productive_day_change:.1f}%")
 
-        with col3:
-            st.metric("Total Productive Hours", 
-                     f"{total_productive_hours:.1f}", 
-                     f"{total_productive_hours_change:.1f}%")
+            with col3:
+                st.metric("Total Productive Hours", 
+                         f"{total_productive_hours:.1f}", 
+                         f"{total_productive_hours_change:.1f}%")
 
     except Exception as e:
-            st.warning("No data available for this period")
+        st.warning("No data available for this period")
+        st.exception(e)
             
 # Filter data for the last 30 days
 df_last_30_days = analytics.filter_date_range(df, delta_days=30)

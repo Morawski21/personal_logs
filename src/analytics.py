@@ -1,5 +1,6 @@
 import datetime as dt
 import pandas as pd
+import numpy as np
 
 def filter_date_range(df, end_date=None, delta_days=7, offset_days=0):
     """
@@ -32,10 +33,30 @@ def filter_date_range(df, end_date=None, delta_days=7, offset_days=0):
     
     return filtered_date_range
 
-
-
-import numpy as np
-import pandas as pd
+def get_last_n_valid_days(df, n=7, date_column='Data', value_column='Razem'):
+    """
+    Get the last n valid days (excluding NA days) from a DataFrame.
+    
+    Args:
+        df (pd.DataFrame): DataFrame containing date and value columns
+        n (int): Number of valid days to retrieve
+        date_column (str): Name of the date column
+        value_column (str): Name of the value column to check for NA values
+        
+    Returns:
+        pd.DataFrame: DataFrame containing the last n valid days
+    """
+    # Sort by date descending
+    sorted_df = df.sort_values(date_column, ascending=False)
+    
+    # Filter out rows where value_column is NA
+    valid_df = sorted_df[sorted_df[value_column].notna()]
+    
+    # Take the first n rows
+    result_df = valid_df.head(n)
+    
+    # Sort back by date ascending
+    return result_df.sort_values(date_column, ascending=True)
 
 def calculate_balance_score(time_data):
     """
