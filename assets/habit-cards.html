@@ -249,9 +249,9 @@
         const habitGrid = document.createElement('div');
         habitGrid.className = 'grid-container';
         
-        // Check if all 6 habits are active (perfect day)
-        const activeTodayCount = habitsData.filter(habit => habit.currentStreak > 0).length;
-        const isPerfectDay = activeTodayCount === 6;
+        // Check if all 6 habits are completed today (perfect day)
+        const completedTodayCount = habitsData.filter(habit => habit.completedToday === "true").length;
+        const isPerfectDay = completedTodayCount === 6;
         
         // Create container for the grid (for perfect day frame)
         let containerElement;
@@ -279,14 +279,17 @@
             const card = document.createElement('div');
             card.className = 'card';
             
-            // Create background element based on streak status
+            // Create background element based on streak status and today's completion
             let background = null;
-            if (isRecordBreaking) {
-                background = document.createElement('div');
-                background.className = 'record-background';
-            } else if (isActive) {
-                background = document.createElement('div');
-                background.className = 'active-background';
+            // Only show colored background if the habit was completed today
+            if (habit.completedToday === "true") {
+                if (isRecordBreaking) {
+                    background = document.createElement('div');
+                    background.className = 'record-background';
+                } else if (isActive) {
+                    background = document.createElement('div');
+                    background.className = 'active-background';
+                }
             }
             
             // Add background first so it's behind other elements
