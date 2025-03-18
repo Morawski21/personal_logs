@@ -17,7 +17,8 @@ utils.set_custom_page_config("Streaks 2.0 (beta)")
 # Define habits to track and their grouping
 ROW1_HABITS = ['Anki', 'Pamiętnik', 'YNAB']
 ROW2_HABITS = ['YouTube', 'Gitara', 'Czytanie']
-HABITS = ROW1_HABITS + ROW2_HABITS
+ROW3_HABITS = ['No porn', 'No 9gag']
+HABITS = ROW1_HABITS + ROW2_HABITS + ROW3_HABITS
 
 # Load data using shared functionality
 try:
@@ -32,7 +33,7 @@ try:
     today_completions = {}
     if is_today_in_data:
         # Check binary habits
-        for habit in ROW1_HABITS:
+        for habit in ROW1_HABITS + ROW3_HABITS:
             if habit in today_row.columns:
                 # Convert boolean to string "true" or "false" for JSON serialization
                 is_completed = today_row[habit].iloc[0] == 1.0
@@ -46,7 +47,7 @@ try:
                 today_completions[habit] = "true" if is_completed else "false"
     else:
         # If today isn't in the data, nothing was completed today
-        for habit in ROW1_HABITS + ROW2_HABITS:
+        for habit in ROW1_HABITS + ROW2_HABITS + ROW3_HABITS:
             today_completions[habit] = "false"
 except Exception as e:
     st.error(f"Error loading data: {str(e)}")
@@ -176,6 +177,30 @@ for habit in ROW2_HABITS:
         "completedToday": today_completions.get(habit, "false")
     })
 
+# Process binary habits for row 3
+for habit in ROW3_HABITS:
+    # Apply the same NA handling to binary habits as we did for duration habits
+    na_mask = df[habit].apply(is_na_value) if habit in df.columns else pd.Series(True, index=df.index)
+    
+    if habit in df.columns:
+        df[f'{habit}_processed'] = df[habit].copy()
+        df.loc[na_mask, f'{habit}_processed'] = np.nan  # Ensure NA values are consistently detected
+        
+        current_streak = calculate_current_streak(df[f'{habit}_processed'])
+        longest_streak = calculate_longest_streak(df[f'{habit}_processed'])
+    else:
+        # If habit column doesn't exist yet, initialize with zeros
+        current_streak = 0
+        longest_streak = 0
+        
+    habits_data.append({
+        "name": habit,
+        "emoji": config.HABITS_CONFIG[habit]['emoji'],
+        "currentStreak": current_streak,
+        "bestStreak": longest_streak,
+        "completedToday": today_completions.get(habit, "false")
+    })
+
 # Page header
 st.title("Habit Streaks",)
 
@@ -199,5 +224,5 @@ html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habit
 # Include info about which habits are completed today in the Streamlit state
 st.session_state['habits_data'] = habits_data
 
-# Display the HTML component (increased height to accommodate perfect day messages)
-components.html(html_content, height=600, scrolling=False)
+# Display the HTML component (increased height to accommodate perfect day messages and the new row)
+components.html(html_content, height=800, scrolling=False)

@@ -31,6 +31,11 @@
             margin-bottom: 20px;
         }
         
+        /* New class for the third row with only 2 habits */
+        .row3 {
+            grid-column: span 2;
+        }
+        
         .perfect-day-container {
             position: relative;
             padding: 6px;
@@ -245,13 +250,16 @@
         // Create the root container
         const rootElement = document.getElementById('root');
         
-        // Create the habit grid
-        const habitGrid = document.createElement('div');
-        habitGrid.className = 'grid-container';
+        // Create two habit grids - one for rows 1 and 2, and another for row 3
+        const habitGrid1And2 = document.createElement('div');
+        habitGrid1And2.className = 'grid-container';
         
-        // Check if all 6 habits are completed today (perfect day)
+        const habitGrid3 = document.createElement('div');
+        habitGrid3.className = 'grid-container';
+        
+        // Check if all 8 habits are completed today (perfect day)
         const completedTodayCount = habitsData.filter(habit => habit.completedToday === "true").length;
-        const isPerfectDay = completedTodayCount === 6;
+        const isPerfectDay = completedTodayCount === 8;
         
         // Create container for the grid (for perfect day frame)
         let containerElement;
@@ -264,15 +272,17 @@
             containerElement.appendChild(frameElement);
             rootElement.appendChild(containerElement);
             
-            // Add the habit grid inside the container
-            containerElement.appendChild(habitGrid);
+            // Add the habit grids inside the container
+            containerElement.appendChild(habitGrid1And2);
+            containerElement.appendChild(habitGrid3);
         } else {
-            // If not a perfect day, add the grid directly to root
-            rootElement.appendChild(habitGrid);
+            // If not a perfect day, add the grids directly to root
+            rootElement.appendChild(habitGrid1And2);
+            rootElement.appendChild(habitGrid3);
         }
         
-        // Create each habit card
-        habitsData.forEach(habit => {
+        // Create each habit card and place in appropriate grid
+        habitsData.forEach((habit, index) => {
             const isRecordBreaking = habit.currentStreak >= habit.bestStreak && habit.currentStreak > 0;
             const isActive = habit.currentStreak > 0;
             
@@ -384,7 +394,14 @@
             content.appendChild(bestStreakBox);
             card.appendChild(content);
             
-            habitGrid.appendChild(card);
+            // Determine which grid to add the card to
+            if (index < 6) {
+                // First 6 habits (rows 1 and 2) go in the first grid
+                habitGrid1And2.appendChild(card);
+            } else {
+                // Last 2 habits (row 3) go in the second grid
+                habitGrid3.appendChild(card);
+            }
         });
         
         // Add a celebratory message for perfect days
