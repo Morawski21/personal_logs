@@ -213,8 +213,10 @@ with st.expander("📈 Daily Activity Analysis", expanded=True):
     df_calc = df_last_30_days.copy()
     df_calc[numeric_cols] = df_calc[numeric_cols].fillna(0)
     
-    # Calculate 7-day moving average
-    df_last_30_days['7_day_avg'] = df_calc['Razem'].rolling(7, min_periods=1).mean()
+    # Calculate moving averages
+    df_last_30_days['7_day_sma'] = df_calc['Razem'].rolling(7, min_periods=1).mean()
+    # Calculate exponential moving average
+    df_last_30_days['7_day_ema'] = df_calc['Razem'].ewm(span=7, adjust=False).mean()
 
     # Get color mapping
     column_colors = config.get_column_colors()
@@ -262,14 +264,25 @@ with st.expander("📈 Daily Activity Analysis", expanded=True):
             hovertemplate='%{x|%Y-%m-%d}<br>%{y} min<extra></extra>' if column != 'Inne' else None
         ))
 
-    # Finally add the trend line on top
+    # Add trend lines on top
+    # Simple Moving Average
     fig_daily_trend.add_trace(go.Scatter(
         x=df_last_30_days['Data'],
-        y=df_last_30_days['7_day_avg'],
+        y=df_last_30_days['7_day_sma'],
         mode='lines',
-        name='7-day Average',
+        name='7-day SMA',
         line=dict(width=2, dash='dot', color='#47ff2f'),
-        hovertemplate='7-day avg: %{y:.1f} min<extra></extra>'
+        hovertemplate='7-day SMA: %{y:.1f} min<extra></extra>'
+    ))
+    
+    # Exponential Moving Average
+    fig_daily_trend.add_trace(go.Scatter(
+        x=df_last_30_days['Data'],
+        y=df_last_30_days['7_day_ema'],
+        mode='lines',
+        name='7-day EMA',
+        line=dict(width=2, dash='solid', color='#ff47af'),
+        hovertemplate='7-day EMA: %{y:.1f} min<extra></extra>'
     ))
 
     # Update layout with a better color scheme
@@ -280,7 +293,7 @@ with st.expander("📈 Daily Activity Analysis", expanded=True):
         legend_title="Activity",
         xaxis=dict(
             tickformat="%Y-%m-%d",
-            range=[start_date, end_date],  # Fix the x-axis range to ensure all 30 days are shown
+            range=[start_date - pd.Timedelta(days=0.5), end_date + pd.Timedelta(days=0.5)],  # Add padding to ensure all bars are fully visible
             type='date'
         ),
         transition_duration=500,  # Add transition animation when data changes
