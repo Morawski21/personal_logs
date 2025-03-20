@@ -37,7 +37,7 @@ df_previous_7_valid_days = analytics.get_last_n_valid_days(df_previous, 7)
 
 # Get active fields
 active_fields = config.get_active_fields()
-time_columns = [field for field in active_fields if field not in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h", "sport", "accessories", "suplementy"]]
+time_columns = [field for field in active_fields if field not in ["20min clean", "YNAB", "Anki", "Pamiętnik", "Plan na jutro", "No porn", "Gaming <1h", "sport", "accessories", "suplementy", "No 9gag"]]
 # Ensure "Inne" is at the beginning of the list
 if "Inne" in time_columns:
     time_columns.remove("Inne")
