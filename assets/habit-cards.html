@@ -238,6 +238,44 @@
                 background-position: 0% 0%;
             }
         }
+
+        /* Personal habits styling */
+        .personal-habit {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .blurred-text {
+            filter: blur(5px);
+            transition: filter 0.3s ease;
+            user-select: none;
+        }
+
+        .personal-habit:hover .blurred-text {
+            filter: blur(3px);
+        }
+
+        .personal-habit.revealed .blurred-text {
+            filter: blur(0);
+        }
+
+        .lock-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #9ca3af;
+            font-size: 18px;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .personal-habit:hover .lock-icon {
+            opacity: 1;
+        }
+
+        .personal-habit.revealed .lock-icon {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -257,9 +295,10 @@
         const habitGrid3 = document.createElement('div');
         habitGrid3.className = 'grid-container';
         
-        // Check if all 8 habits are completed today (perfect day)
-        const completedTodayCount = habitsData.filter(habit => habit.completedToday === "true").length;
-        const isPerfectDay = completedTodayCount === 8;
+        // Check if all main habits (non-personal) are completed today (perfect day)
+        const mainHabits = habitsData.filter(habit => !habit.isPersonal);
+        const mainHabitsCompleted = mainHabits.filter(habit => habit.completedToday === "true").length;
+        const isPerfectDay = mainHabitsCompleted === mainHabits.length;
         
         // Create container for the grid (for perfect day frame)
         let containerElement;
@@ -287,7 +326,7 @@
             const isActive = habit.currentStreak > 0;
             
             const card = document.createElement('div');
-            card.className = 'card';
+            card.className = habit.isPersonal ? 'card personal-habit' : 'card';
             
             // Create background element based on streak status and today's completion
             let background = null;
@@ -316,8 +355,20 @@
             emoji.textContent = habit.emoji;
             
             const name = document.createElement('h3');
-            name.className = 'habit-name';
+            name.className = habit.isPersonal ? 'habit-name blurred-text' : 'habit-name';
             name.textContent = habit.name;
+            
+            // Add lock icon for personal habits
+            if (habit.isPersonal) {
+                const lockIcon = document.createElement('i');
+                lockIcon.className = 'fa-solid fa-lock lock-icon';
+                card.appendChild(lockIcon);
+                
+                // Add click event to reveal name
+                card.addEventListener('click', function() {
+                    this.classList.toggle('revealed');
+                });
+            }
             
             header.appendChild(emoji);
             header.appendChild(name);

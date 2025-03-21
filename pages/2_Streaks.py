@@ -177,7 +177,13 @@ for habit in ROW2_HABITS:
         "completedToday": today_completions.get(habit, "false")
     })
 
-# Process binary habits for row 3
+# Store main habits data before adding personal habits
+main_habits_data = habits_data.copy()
+
+# Create a separate list for personal habits
+personal_habits_data = []
+
+# Process binary habits for row 3 (personal habits)
 for habit in ROW3_HABITS:
     # Apply the same NA handling to binary habits as we did for duration habits
     na_mask = df[habit].apply(is_na_value) if habit in df.columns else pd.Series(True, index=df.index)
@@ -193,13 +199,22 @@ for habit in ROW3_HABITS:
         current_streak = 0
         longest_streak = 0
         
-    habits_data.append({
+    personal_habit = {
         "name": habit,
         "emoji": config.HABITS_CONFIG[habit]['emoji'],
         "currentStreak": current_streak,
         "bestStreak": longest_streak,
-        "completedToday": today_completions.get(habit, "false")
-    })
+        "completedToday": today_completions.get(habit, "false"),
+        "isPersonal": True  # Mark as personal habit to enable blurring in HTML
+    }
+    personal_habits_data.append(personal_habit)
+
+# Always add personal habits to the data, but with the flag to indicate they're personal
+habits_data.extend(personal_habits_data)
+
+# The expander is just for informational purposes
+with st.expander("Monitoring bad habits", expanded=False):
+    st.info("Personal habits are blurred in the dashboard. Click on a card to reveal the habit name.")
 
 # Page header
 st.title("Habit Streaks",)
@@ -223,6 +238,8 @@ html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habit
 
 # Include info about which habits are completed today in the Streamlit state
 st.session_state['habits_data'] = habits_data
+st.session_state['main_habits_data'] = main_habits_data
+st.session_state['personal_habits_data'] = personal_habits_data
 
 # Display the HTML component (increased height to accommodate perfect day messages and the new row)
 components.html(html_content, height=800, scrolling=False)
