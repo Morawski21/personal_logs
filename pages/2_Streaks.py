@@ -9,16 +9,17 @@ import src.utils as utils
 import src.config as config
 from src.data_handler import get_logbook_data
 
-
-
 # Set page config
 utils.set_custom_page_config("Streaks 2.0 (beta)")
 
 # Define habits to track and their grouping
 ROW1_HABITS = ['Anki', 'Pamiętnik', 'YNAB']
 ROW2_HABITS = ['YouTube', 'Gitara', 'Czytanie']
-ROW3_HABITS = ['No porn', 'No 9gag']
+ROW3_HABITS = ['No porn', 'No 9gag', '20min clean']
 HABITS = ROW1_HABITS + ROW2_HABITS + ROW3_HABITS
+
+# Define which habits should be blurred (personal)
+PERSONAL_HABITS = ['No porn']  # Now only 'No porn' is marked as personal
 
 # Load data using shared functionality
 try:
@@ -161,7 +162,8 @@ for habit in ROW1_HABITS:
         "emoji": config.HABITS_CONFIG[habit]['emoji'],
         "currentStreak": current_streak,
         "bestStreak": longest_streak,
-        "completedToday": today_completions.get(habit, "false")
+        "completedToday": today_completions.get(habit, "false"),
+        "isPersonal": habit in PERSONAL_HABITS  # Check if this habit should be personal
     })
 
 # Process duration habits
@@ -174,16 +176,11 @@ for habit in ROW2_HABITS:
         "emoji": config.HABITS_CONFIG[habit]['emoji'],
         "currentStreak": current_streak,
         "bestStreak": longest_streak,
-        "completedToday": today_completions.get(habit, "false")
+        "completedToday": today_completions.get(habit, "false"),
+        "isPersonal": habit in PERSONAL_HABITS  # Check if this habit should be personal
     })
 
-# Store main habits data before adding personal habits
-main_habits_data = habits_data.copy()
-
-# Create a separate list for personal habits
-personal_habits_data = []
-
-# Process binary habits for row 3 (personal habits)
+# Process binary habits for row 3
 for habit in ROW3_HABITS:
     # Apply the same NA handling to binary habits as we did for duration habits
     na_mask = df[habit].apply(is_na_value) if habit in df.columns else pd.Series(True, index=df.index)
@@ -199,25 +196,24 @@ for habit in ROW3_HABITS:
         current_streak = 0
         longest_streak = 0
         
-    personal_habit = {
+    habits_data.append({
         "name": habit,
         "emoji": config.HABITS_CONFIG[habit]['emoji'],
         "currentStreak": current_streak,
         "bestStreak": longest_streak,
         "completedToday": today_completions.get(habit, "false"),
-        "isPersonal": True  # Mark as personal habit to enable blurring in HTML
-    }
-    personal_habits_data.append(personal_habit)
+        "isPersonal": habit in PERSONAL_HABITS  # Check if this specific habit should be personal
+    })
 
-# Always add personal habits to the data, but with the flag to indicate they're personal
-habits_data.extend(personal_habits_data)
+# Store all habits data to session state
+st.session_state['habits_data'] = habits_data
 
-# The expander is just for informational purposes
-with st.expander("Monitoring bad habits", expanded=False):
-    st.info("Personal habits are blurred in the dashboard. Click on a card to reveal the habit name.")
+# Filter the data to get main and personal habits separately if needed for other parts of the app
+st.session_state['main_habits_data'] = [habit for habit in habits_data if not habit.get('isPersonal', False)]
+st.session_state['personal_habits_data'] = [habit for habit in habits_data if habit.get('isPersonal', False)]
 
 # Page header
-st.title("Habit Streaks",)
+st.title("Habit Streaks")
 
 # Load the HTML template from external file
 import os
@@ -235,11 +231,6 @@ except Exception as e:
 
 # Replace the placeholder with actual habits data
 html_content = html_template.replace('HABITS_DATA_PLACEHOLDER', json.dumps(habits_data))
-
-# Include info about which habits are completed today in the Streamlit state
-st.session_state['habits_data'] = habits_data
-st.session_state['main_habits_data'] = main_habits_data
-st.session_state['personal_habits_data'] = personal_habits_data
 
 # Display the HTML component (increased height to accommodate perfect day messages and the new row)
 components.html(html_content, height=800, scrolling=False)
