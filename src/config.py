@@ -20,7 +20,8 @@ HABITS_CONFIG = {
     "Gaming <1h": {"color": "#0000ff", "active": True, "emoji": "🎮", "type": "binary"},
     "sport": {"color": "#ff9900", "active": True, "emoji": "🏃", "type": "description"},
     "accessories": {"color": "#cc00cc", "active": True, "emoji": "💍", "type": "description"},
-    "suplementy": {"color": "#00cc00", "active": True, "emoji": "💊", "type": "binary"}
+    "suplementy": {"color": "#00cc00", "active": True, "emoji": "💊", "type": "binary"},
+    "Cronometer": {"color": "#00cc00", "active": True, "emoji": "⌚", "type": "binary"}
 }
 
 # Function to get active fields
