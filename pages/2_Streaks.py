@@ -13,7 +13,7 @@ from src.data_handler import get_logbook_data
 utils.set_custom_page_config("Streaks 2.0 (beta)")
 
 # Define habits to track and their grouping
-ROW1_HABITS = ['Anki', 'Pamiętnik', 'YNAB']
+ROW1_HABITS = ['Anki', 'Cronometer', 'YNAB']
 ROW2_HABITS = ['YouTube', 'Gitara', 'Czytanie']
 ROW3_HABITS = ['No porn', 'No 9gag', '20min clean']
 HABITS = ROW1_HABITS + ROW2_HABITS + ROW3_HABITS
