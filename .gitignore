@@ -3,10 +3,14 @@
 
 # Local assets & environment files
 /data
+/temp
 .env
 
 # Docker files
 *.tar
+
+# Claude Code files
+claude.md
 
 # Cache files
 /__pycache__
